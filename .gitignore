@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.streamlit/secrets.toml
+.linkguard.cfg
+*.db
+venv/
+.venv/
+node_modules/
+.DS_Store
