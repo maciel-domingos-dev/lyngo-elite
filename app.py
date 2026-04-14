@@ -161,7 +161,7 @@ st.set_page_config(
     page_title="Lyngo Elite",
     page_icon="🔗",
     layout="centered",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="auto",
 )
 
 # ── CSS Crítico Mobile — injetado imediatamente após set_page_config ──────────
@@ -2032,13 +2032,15 @@ footer     { visibility: hidden; }
     body.lg-sidebar-open [data-testid="stSidebar"] {
         transform: translateX(0) !important;
         visibility: visible !important;
+        display: block !important;
         pointer-events: auto !important;
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         height: 100dvh !important;
         z-index: 999999 !important;
-        min-width: 78vw !important;
+        width: 80vw !important;
+        min-width: 280px !important;
         max-width: 85vw !important;
         overflow-y: auto !important;
         box-shadow: 6px 0 40px rgba(0,0,0,0.85) !important;
@@ -2867,7 +2869,7 @@ with st.sidebar:
 
 page = st.session_state.page
 
-# ── Fallback: botão para reabrir menu se sidebar sumir ────────────────────────
+# ── Botão mobile: abre/fecha sidebar via classe no body ──────────────────────
 st.markdown("""
 <style>
 #lg-menu-btn {
@@ -2891,32 +2893,58 @@ st.markdown("""
     display: block;
 }
 #lg-menu-btn:active { background: rgba(0,245,255,0.18); }
-/* Oculta quando sidebar está aberta (controlado por classe no body) */
 body.lg-sidebar-open #lg-menu-btn { display: none !important; }
 </style>
-<button id="lg-menu-btn" onclick="lgMenuToggle()" title="Abrir Menu">☰ MENU</button>
+<button id="lg-menu-btn" title="Abrir Menu">☰ MENU</button>
 <script>
-/* ── Controle do menu mobile via classe no body ── */
-function lgMenuToggle() {
-    document.body.classList.toggle('lg-sidebar-open');
-}
-/* Fechar ao tocar fora da sidebar */
-document.addEventListener('click', function(e) {
-    if (!document.body.classList.contains('lg-sidebar-open')) return;
-    var sb  = document.querySelector('[data-testid="stSidebar"]');
-    var btn = document.getElementById('lg-menu-btn');
-    if (sb && !sb.contains(e.target) && (!btn || !btn.contains(e.target))) {
+/* ── Guard: registra listeners UMA ÚNICA VEZ, independente de re-renders ── */
+if (!window._lgMenuInit) {
+    window._lgMenuInit = true;
+
+    /* Função global de toggle */
+    window.lgMenuOpen = function() {
+        document.body.classList.add('lg-sidebar-open');
+    };
+    window.lgMenuClose = function() {
         document.body.classList.remove('lg-sidebar-open');
+    };
+    window.lgMenuToggle = function() {
+        document.body.classList.toggle('lg-sidebar-open');
+    };
+
+    /* Fechar ao tocar fora da sidebar — bubble phase (não capture) */
+    document.addEventListener('click', function(e) {
+        if (!document.body.classList.contains('lg-sidebar-open')) return;
+        var sb  = document.querySelector('[data-testid="stSidebar"]');
+        var btn = document.getElementById('lg-menu-btn');
+        if (sb && !sb.contains(e.target) && (!btn || !btn.contains(e.target))) {
+            document.body.classList.remove('lg-sidebar-open');
+        }
+    }, false);
+
+    /* Fechar ao clicar em link/botão de navegação dentro da sidebar */
+    document.addEventListener('click', function(e) {
+        if (!document.body.classList.contains('lg-sidebar-open')) return;
+        var sb = document.querySelector('[data-testid="stSidebar"]');
+        if (sb && sb.contains(e.target) && e.target.closest('button')) {
+            setTimeout(function() { document.body.classList.remove('lg-sidebar-open'); }, 150);
+        }
+    }, false);
+}
+
+/* Associa clique ao botão cada vez que o DOM re-renderiza */
+(function bindBtn() {
+    var btn = document.getElementById('lg-menu-btn');
+    if (btn) {
+        btn.onclick = null;
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            window.lgMenuToggle();
+        });
+    } else {
+        setTimeout(bindBtn, 80);
     }
-}, true);
-/* Fechar ao navegar (clicar em botão de navegação na sidebar) */
-document.addEventListener('click', function(e) {
-    if (!document.body.classList.contains('lg-sidebar-open')) return;
-    var sb = document.querySelector('[data-testid="stSidebar"]');
-    if (sb && sb.contains(e.target) && e.target.closest('button')) {
-        setTimeout(function() { document.body.classList.remove('lg-sidebar-open'); }, 120);
-    }
-});
+})();
 </script>
 """, unsafe_allow_html=True)
 
@@ -4142,6 +4170,13 @@ elif page == "Configurações":
 st.markdown("""
 <style>
 
+/* ── Sidebar: transição suave + largura mínima garantida ─────────────────── */
+section[data-testid="stSidebar"],
+[data-testid="stSidebar"] {
+    transition: all 0.5s ease !important;
+    min-width: 300px !important;
+}
+
 /* ── Botão nativo de colapso/hamburger — forçar visível e clicável ─────────── */
 [data-testid="stSidebarCollapseButton"],
 [data-testid="collapsedControl"],
@@ -4228,13 +4263,15 @@ section.main,
     body.lg-sidebar-open [data-testid="stSidebar"] {
         transform: translateX(0) !important;
         visibility: visible !important;
+        display: block !important;
         pointer-events: auto !important;
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         height: 100dvh !important;
         z-index: 999999 !important;
-        min-width: 78vw !important;
+        width: 80vw !important;
+        min-width: 280px !important;
         max-width: 85vw !important;
         overflow-y: auto !important;
     }
