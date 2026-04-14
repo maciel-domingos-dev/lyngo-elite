@@ -1,0 +1,27 @@
+.gcloudignore
+.git
+.gitignore
+
+# Ambiente virtual — não enviar, o Dockerfile instala as deps
+venv/
+env/
+.env
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Secrets locais — NÃO enviar para o Cloud
+.streamlit/secrets.toml
+.linkguard.cfg
+
+# Backup e arquivos de dev
+app_backup.py
+*.db-journal
+
+# Docs e arquivos desnecessários no container
+*.docx
+*.md
+CLAUDE.md

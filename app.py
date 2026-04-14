@@ -160,8 +160,8 @@ def _init_session_from_cfg() -> None:
 st.set_page_config(
     page_title="Lyngo Elite",
     page_icon="🔗",
-    layout="wide",
-    initial_sidebar_state="expanded",
+    layout="centered",
+    initial_sidebar_state="collapsed",
 )
 
 # ── Rastreador de cliques via ?r=slug ─────────────────────────────────────────
@@ -261,6 +261,7 @@ div[class*="appview"] {
     background-color: #030508 !important;
     height: 100% !important;
     min-height: 100vh !important;
+    overflow-x: hidden !important;
 }
 
 [data-testid="stMain"],
@@ -288,16 +289,16 @@ div[class*="main"] {
 #auth-container,
 .main .block-container,
 [data-testid="stMain"] .block-container {
-    max-width: 500px !important;
-    width: 500px !important;
+    max-width: min(500px, 96vw) !important;
+    width: min(500px, 96vw) !important;
     margin: 0 auto !important;
 }
 
 .main .block-container {
-    max-width: 500px !important;
-    width: 500px !important;
+    max-width: min(500px, 96vw) !important;
+    width: min(500px, 96vw) !important;
     margin: 0 auto !important;
-    padding: 2.6rem 2.4rem 2.2rem !important;
+    padding: 2.6rem clamp(1rem, 5vw, 2.4rem) 2.2rem !important;
     background: linear-gradient(#090e1b, #060810) padding-box,
                 linear-gradient(135deg, #00f5ff, #a855f7, #ff2d78) border-box !important;
     border: 2px solid transparent !important;
@@ -342,9 +343,11 @@ div[class*="main"] {
     filter: drop-shadow(0 0 14px rgba(0,245,255,0.5)) drop-shadow(0 0 28px rgba(168,85,247,0.3)) !important;
 }
 .lg-auth-sub {
-    text-align: center; font-size: 0.58rem; letter-spacing: 5px;
+    text-align: center; font-size: 0.58rem; letter-spacing: clamp(1px, 1vw, 5px);
     color: #ff2d78; margin-bottom: 2rem;
     text-transform: uppercase; font-family: 'Rajdhani', sans-serif;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 100%;
 }
 .lg-auth-mode {
     text-align: center; font-size: 0.66rem; letter-spacing: 3px;
@@ -588,8 +591,9 @@ _AUTH_JS = """
                  document.querySelector('[data-testid="stMain"] .block-container');
         if(bc){
             bc.id = 'auth-container';
-            bc.style.setProperty('max-width','500px','important');
-            bc.style.setProperty('width','500px','important');
+            var _mw = Math.min(500, window.innerWidth * 0.96) + 'px';
+            bc.style.setProperty('max-width',_mw,'important');
+            bc.style.setProperty('width',_mw,'important');
             bc.style.setProperty('margin-left','auto','important');
             bc.style.setProperty('margin-right','auto','important');
             bc.style.setProperty('border','2px solid #00f5ff','important');
@@ -2046,6 +2050,145 @@ div[data-baseweb="form-control"] label {
     box-shadow: 0 0 20px rgba(255,0,127,0.5), inset 0 0 10px rgba(255,0,127,0.1) !important;
     text-shadow: 0 0 10px #ff007f, 0 0 24px rgba(255,0,127,0.5) !important;
     filter: brightness(1.12) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE RESPONSIVO — max-width: 768px
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* ── Container principal ── */
+    .block-container,
+    [data-testid="stMain"] .block-container {
+        padding: 0.75rem 0.6rem 2rem 0.6rem !important;
+        max-width: 100% !important;
+    }
+
+    /* ── Metric grid: 2x2 em vez de 4x1 ── */
+    .metric-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.65rem !important;
+    }
+    .metric-card {
+        padding: 0.85rem 0.9rem !important;
+    }
+    .metric-value {
+        font-size: 1.35rem !important;
+    }
+    .metric-label {
+        font-size: 0.62rem !important;
+    }
+
+    /* ── Título de página ── */
+    .page-title {
+        font-size: 1.25rem !important;
+    }
+    .page-subtitle {
+        font-size: 0.72rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    /* ── Colunas Streamlit: empilhar verticalmente ── */
+    [data-testid="stHorizontalBlock"] {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        width: 100% !important;
+        min-width: 100% !important;
+        flex: none !important;
+    }
+
+    /* ── Panel card ── */
+    .panel-card {
+        padding: 0.85rem 0.9rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    .panel-card h3 {
+        font-size: 0.75rem !important;
+        letter-spacing: 1.5px !important;
+    }
+
+    /* ── Produto row: layout simplificado ── */
+    .produto-row {
+        grid-template-columns: 1fr auto !important;
+        gap: 0.4rem !important;
+        padding: 0.6rem 0.75rem !important;
+    }
+    .produto-desc { display: none !important; }
+
+    /* ── Produto card ── */
+    .produto-card {
+        padding: 0.8rem 0.9rem 0.65rem 0.9rem !important;
+    }
+
+    /* ── Expander ── */
+    [data-testid="stExpander"] summary,
+    [data-testid="stExpander"] [role="button"] {
+        font-size: 0.82rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    /* ── Formulários ── */
+    [data-testid="stForm"] {
+        padding: 1rem !important;
+    }
+
+    /* ── Sidebar: tela cheia em mobile ── */
+    [data-testid="stSidebar"] {
+        min-width: 85vw !important;
+        max-width: 85vw !important;
+    }
+
+    /* ── Auth container: sem bordas arredondadas no mobile ── */
+    .main .block-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        border-radius: 12px !important;
+        padding: 1.6rem 1.2rem !important;
+    }
+
+    /* ── Chat input ── */
+    [data-testid="stChatInput"] {
+        font-size: 0.88rem !important;
+    }
+
+    /* ── Atalhos VIBEL ── */
+    .btn-wrap-atalho button,
+    .btn-wrap-atalho [data-baseweb="button"] {
+        font-size: 9px !important;
+        padding: 0 4px !important;
+        letter-spacing: 0.2px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+    }
+
+    /* ── Botões de ação compactos ── */
+    .btn-wrap-cyan button, .btn-wrap-pink button, .btn-wrap-red button {
+        font-size: 0.6rem !important;
+        padding: 0 0.4rem !important;
+        min-height: 30px !important;
+        height: 30px !important;
+    }
+
+    /* ── Texto truncado nos links ── */
+    .link-url-dim, .link-url-text, .pc-link-chip {
+        font-size: 0.65rem !important;
+    }
+
+    /* ── Badges ── */
+    .badge {
+        font-size: 0.62rem !important;
+        padding: 0.1rem 0.45rem !important;
+    }
+
+    /* ── Botão menu fixo: mais visível ── */
+    #lg-menu-btn {
+        font-size: 0.72rem !important;
+        padding: 0.3rem 0.65rem !important;
+        top: 0.5rem !important;
+        left: 0.5rem !important;
+    }
 }
 </style>
 """
