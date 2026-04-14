@@ -2220,12 +2220,6 @@ div[data-baseweb="form-control"] label {
         padding: 1rem !important;
     }
 
-    /* ── Sidebar: tela cheia em mobile ── */
-    [data-testid="stSidebar"] {
-        min-width: 85vw !important;
-        max-width: 85vw !important;
-    }
-
     /* ── Auth container: sem bordas arredondadas no mobile ── */
     .main .block-container {
         max-width: 100% !important;
@@ -4169,10 +4163,18 @@ section[data-testid="stSidebar"],
     transition: transform 0.5s ease, visibility 0.5s ease !important;
 }
 
-/* Sidebar expandida pelo Streamlit (aria-expanded="true"): garantir renderização */
+/* Sidebar expandida pelo Streamlit (aria-expanded="true"): garantir renderização e largura */
+[data-testid="stSidebar"][aria-expanded="true"],
 section[data-testid="stSidebar"][aria-expanded="true"] {
     display: block !important;
-    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+}
+
+/* Conteúdo interno da sidebar: sempre visível quando expandida */
+[data-testid="stSidebarUserContent"] {
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 /* ── Botão nativo de colapso/hamburger — forçar visível e clicável ─────────── */
@@ -4321,10 +4323,7 @@ section.main,
         padding: 3rem 0.75rem 0.75rem 0.75rem !important;
     }
 
-    [data-testid="stSidebar"][aria-expanded="true"] {
-        min-width: 85vw !important;
-        max-width: 92vw !important;
-    }
+    /* Sidebar aberta em telas pequenas: manter 300px definido globalmente */
 }
 
 </style>
