@@ -164,6 +164,45 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# ── CSS Crítico Mobile — injetado imediatamente após set_page_config ──────────
+# Garante que as regras de responsividade sejam as primeiras a serem aplicadas,
+# evitando flash de layout desktop em telas mobile.
+st.markdown("""
+<style>
+/* Força colunas Streamlit a empilharem no mobile (selector atualizado para v1.40+) */
+@media (max-width: 768px) {
+    /* Streamlit >= 1.40 usa data-testid="column"; versões anteriores usam "stColumn" */
+    [data-testid="column"],
+    [data-testid="stColumn"] {
+        width: 100% !important;
+        flex: 1 1 calc(100% - 1rem) !important;
+        min-width: 100% !important;
+    }
+    /* Container principal sem padding lateral excessivo */
+    .block-container,
+    [data-testid="stMain"] .block-container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        max-width: 100% !important;
+    }
+    /* Bloco horizontal vira coluna */
+    [data-testid="stHorizontalBlock"],
+    [data-testid="stColumns"] {
+        flex-direction: column !important;
+        flex-wrap: wrap !important;
+    }
+}
+@media (max-width: 480px) {
+    [data-testid="column"],
+    [data-testid="stColumn"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ── Rastreador de cliques via ?r=slug ─────────────────────────────────────────
 # Deve ficar logo após st.set_page_config (primeiro comando Streamlit)
 _r_slug = st.query_params.get("r")
@@ -2089,14 +2128,17 @@ div[data-baseweb="form-control"] label {
     }
 
     /* ── Colunas Streamlit: empilhar verticalmente ── */
-    [data-testid="stHorizontalBlock"] {
+    [data-testid="stHorizontalBlock"],
+    [data-testid="stColumns"] {
         flex-direction: column !important;
         gap: 0.5rem !important;
     }
-    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"],
+    [data-testid="stHorizontalBlock"] > [data-testid="column"],
+    [data-testid="stColumns"] > [data-testid="column"] {
         width: 100% !important;
         min-width: 100% !important;
-        flex: none !important;
+        flex: 1 1 calc(100% - 1rem) !important;
     }
 
     /* ── Panel card ── */
@@ -2275,13 +2317,6 @@ input, textarea, select,
         font-size: 16px !important;
     }
 
-    /* Metric grid: uma coluna só em telas muito pequenas */
-    @media (max-width: 480px) {
-        .metric-grid {
-            grid-template-columns: 1fr !important;
-        }
-    }
-
     /* vivi-header menor no mobile */
     .vivi-header {
         padding: 0.6rem 0.85rem !important;
@@ -2307,10 +2342,13 @@ input, textarea, select,
     }
 
     /* Atalhos VIBEL: 1 coluna + wrap */
-    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) {
+    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho),
+    [data-testid="stColumns"]:has(.btn-wrap-atalho) {
         flex-wrap: wrap !important;
     }
-    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="stColumn"] {
+    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="stColumn"],
+    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="column"],
+    [data-testid="stColumns"]:has(.btn-wrap-atalho) > [data-testid="column"] {
         min-width: 45% !important;
         flex: 1 1 45% !important;
     }
@@ -2368,7 +2406,9 @@ input, textarea, select,
     }
 
     /* Atalhos VIBEL: 1 por linha */
-    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="stColumn"] {
+    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="stColumn"],
+    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="column"],
+    [data-testid="stColumns"]:has(.btn-wrap-atalho) > [data-testid="column"] {
         min-width: 100% !important;
         flex: 1 1 100% !important;
     }
