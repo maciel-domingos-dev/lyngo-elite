@@ -1986,29 +1986,55 @@ footer     { visibility: hidden; }
 [data-testid="stToolbar"]    { visibility: hidden; }
 [data-testid="stDecoration"] { display: none; }
 
-/* ── Sidebar: força visibilidade em Streamlit 1.55 ── */
-/* Sidebar sempre visível e expandida */
-[data-testid="stSidebar"] {
-    display: block !important;
-    visibility: visible !important;
-    transform: none !important;
-    min-width: 220px !important;
+/* ── Sidebar: força visibilidade APENAS no desktop ── */
+/* No mobile, o Streamlit usa transform para drawer — não interferir */
+@media (min-width: 769px) {
+    [data-testid="stSidebar"] {
+        display: block !important;
+        visibility: visible !important;
+        transform: none !important;
+        min-width: 220px !important;
+    }
+    /* Streamlit 1.55 usa aria-expanded para controlar colapso */
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        width: auto !important;
+        min-width: 220px !important;
+        transform: translateX(0) !important;
+    }
+    /* Botão de colapso sempre visível no desktop */
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarNavCollapsedControl"] {
+        visibility: visible !important;
+        display: flex !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 999 !important;
+    }
 }
-/* Streamlit 1.55 usa aria-expanded para controlar colapso */
-[data-testid="stSidebar"][aria-expanded="false"] {
-    width: auto !important;
-    min-width: 220px !important;
-    transform: translateX(0) !important;
-}
-/* Botão de colapso sempre visível */
-[data-testid="stSidebarCollapseButton"],
-[data-testid="collapsedControl"],
-[data-testid="stSidebarNavCollapsedControl"] {
-    visibility: visible !important;
-    display: flex !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    z-index: 999 !important;
+/* No mobile: sidebar começa recolhida, abre como drawer sobre o conteúdo */
+@media (max-width: 768px) {
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        transform: translateX(-100%) !important;
+        visibility: hidden !important;
+    }
+    [data-testid="stSidebar"][aria-expanded="true"] {
+        transform: translateX(0) !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100dvh !important;
+        z-index: 99999 !important;
+        min-width: 80vw !important;
+        max-width: 85vw !important;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.7) !important;
+    }
+    /* Padding-top para não ficar atrás do botão de menu fixo */
+    .main .block-container,
+    [data-testid="stMain"] .block-container {
+        padding-top: 3.5rem !important;
+    }
 }
 /* Ícone da seta */
 [data-testid="stSidebarCollapseButton"] svg,
@@ -2756,8 +2782,9 @@ with st.sidebar:
 (function() {{
     var active = {repr(_active_page)};
 
-    /* ── Força sidebar expandida (Streamlit 1.55 usa aria-expanded) ── */
+    /* ── Força sidebar expandida apenas no desktop ── */
     function forceExpand() {{
+        if (window.innerWidth <= 768) return; /* mobile: não forçar — sidebar é drawer */
         var sb = document.querySelector('[data-testid="stSidebar"]');
         if (!sb) return;
         /* Se estiver colapsada, clica no botão de colapso para reabrir */
@@ -4089,16 +4116,45 @@ st.markdown("""
     }
 }
 
-/* ── MOBILE (<=768px): empilha colunas, padding 1rem ──────────────────────── */
+/* ── MOBILE (<=768px): sidebar como drawer, conteúdo em coluna única ────────── */
 @media (max-width: 768px) {
 
-    /* Container: 100% da viewport, sem padding desperdiçado */
+    /* App container: coluna única — sidebar não empurra o conteúdo */
+    [data-testid="stAppViewContainer"] {
+        flex-direction: column !important;
+    }
+
+    /* Sidebar RECOLHIDA: desliza para fora da tela */
+    [data-testid="stAppViewContainer"] [data-testid="stSidebar"][aria-expanded="false"],
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        transform: translateX(-100%) !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    /* Sidebar ABERTA: overlay fixo sobre o conteúdo */
+    [data-testid="stAppViewContainer"] [data-testid="stSidebar"][aria-expanded="true"],
+    [data-testid="stSidebar"][aria-expanded="true"] {
+        transform: translateX(0) !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100dvh !important;
+        z-index: 99999 !important;
+        min-width: 78vw !important;
+        max-width: 85vw !important;
+        box-shadow: 6px 0 32px rgba(0,0,0,0.8), 0 0 0 100vw rgba(0,0,0,0.45) !important;
+    }
+
+    /* Conteúdo principal: largura total, padding-top para o botão de menu */
     [data-testid="stAppViewContainer"] .block-container,
     [data-testid="stAppViewContainer"] [data-testid="stMain"] .block-container,
     .st-key-main_layout .block-container {
         max-width: 100% !important;
         width: 100% !important;
-        padding: 1rem !important;
+        padding: 3.5rem 1rem 1rem 1rem !important; /* top extra para o botão #lg-menu-btn */
     }
 
     /* Blocos horizontais viram colunas */
@@ -4139,12 +4195,12 @@ st.markdown("""
 @media (max-width: 480px) {
 
     [data-testid="stAppViewContainer"] .block-container {
-        padding: 0.75rem !important;
+        padding: 3rem 0.75rem 0.75rem 0.75rem !important;
     }
 
-    [data-testid="stSidebar"] {
-        min-width: 90vw !important;
-        max-width: 90vw !important;
+    [data-testid="stSidebar"][aria-expanded="true"] {
+        min-width: 85vw !important;
+        max-width: 92vw !important;
     }
 }
 
