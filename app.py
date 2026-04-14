@@ -1996,12 +1996,9 @@ footer     { visibility: hidden; }
         display: block !important;
         visibility: visible !important;
         transform: none !important;
-        min-width: 220px !important;
     }
-    /* Streamlit 1.55 usa aria-expanded para controlar colapso */
+    /* Streamlit controla a largura no desktop — não interferir */
     [data-testid="stSidebar"][aria-expanded="false"] {
-        width: auto !important;
-        min-width: 220px !important;
         transform: translateX(0) !important;
     }
     /* Botão de colapso sempre visível no desktop */
@@ -2028,7 +2025,7 @@ footer     { visibility: hidden; }
         visibility: hidden !important;
         pointer-events: none !important;
     }
-    /* ABERTA: overlay fixo sobre o conteúdo */
+    /* ABERTA: overlay fixo sobre o conteúdo — Streamlit controla a largura */
     body.lg-sidebar-open [data-testid="stSidebar"] {
         transform: translateX(0) !important;
         visibility: visible !important;
@@ -2039,9 +2036,6 @@ footer     { visibility: hidden; }
         left: 0 !important;
         height: 100dvh !important;
         z-index: 999999 !important;
-        width: 80vw !important;
-        min-width: 280px !important;
-        max-width: 85vw !important;
         overflow-y: auto !important;
         box-shadow: 6px 0 40px rgba(0,0,0,0.85) !important;
     }
@@ -2417,8 +2411,7 @@ input, textarea, select {
     .metric-card { padding: 0.7rem 0.8rem !important; }
     .page-title { font-size: 1rem !important; }
 
-    /* Sidebar em modo drawer ocupa quase tela inteira */
-    [data-testid="stSidebar"] { min-width: 90vw !important; max-width: 90vw !important; }
+    /* Sidebar em modo drawer: Streamlit controla a largura */
 
     /* Atalhos VIBEL: 1 por linha */
     [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="stColumn"],
@@ -4170,11 +4163,16 @@ elif page == "Configurações":
 st.markdown("""
 <style>
 
-/* ── Sidebar: transição suave + largura mínima garantida ─────────────────── */
+/* ── Sidebar: transição suave — Streamlit controla largura ───────────────── */
 section[data-testid="stSidebar"],
 [data-testid="stSidebar"] {
-    transition: all 0.5s ease !important;
-    min-width: 300px !important;
+    transition: transform 0.5s ease, visibility 0.5s ease !important;
+}
+
+/* Sidebar expandida pelo Streamlit (aria-expanded="true"): garantir renderização */
+section[data-testid="stSidebar"][aria-expanded="true"] {
+    display: block !important;
+    width: 300px !important;
 }
 
 /* ── Botão nativo de colapso/hamburger — forçar visível e clicável ─────────── */
@@ -4258,7 +4256,7 @@ section.main,
         pointer-events: none !important;
     }
 
-    /* Sidebar ABERTA */
+    /* Sidebar ABERTA — Streamlit controla a largura */
     body.lg-sidebar-open [data-testid="stAppViewContainer"] [data-testid="stSidebar"],
     body.lg-sidebar-open [data-testid="stSidebar"] {
         transform: translateX(0) !important;
@@ -4270,9 +4268,6 @@ section.main,
         left: 0 !important;
         height: 100dvh !important;
         z-index: 999999 !important;
-        width: 80vw !important;
-        min-width: 280px !important;
-        max-width: 85vw !important;
         overflow-y: auto !important;
     }
 
