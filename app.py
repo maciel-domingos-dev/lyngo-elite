@@ -4142,18 +4142,35 @@ elif page == "Configurações":
 st.markdown("""
 <style>
 
-/* ── Botão nativo de colapso da sidebar — z-index máximo em qualquer tela ──── */
-[data-testid="stSidebarCollapseButton"] {
+/* ── Botão nativo de colapso/hamburger — forçar visível e clicável ─────────── */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"],
+[data-testid="stSidebarNavCollapsedControl"] {
+    visibility: visible !important;
+    display: flex !important;
+    opacity: 1 !important;
     z-index: 9999999 !important;
     position: relative !important;
     pointer-events: auto !important;
     touch-action: manipulation !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 5px !important;
 }
-/* Header Streamlit: transparente e invisível para cliques */
+/* Header Streamlit: transparente e não bloqueia cliques na área geral */
 [data-testid="stHeader"] {
+    background: transparent !important;
     pointer-events: none !important;
 }
-/* .main sem margin-top negativo que cubra a barra de navegação */
+/* Mas qualquer botão/link DENTRO do header continua clicável */
+[data-testid="stHeader"] button,
+[data-testid="stHeader"] a,
+[data-testid="stHeader"] [data-testid="collapsedControl"],
+[data-testid="stHeader"] [data-testid="stSidebarCollapseButton"],
+[data-testid="stHeader"] [data-testid="stSidebarNavCollapsedControl"] {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+}
+/* .main sem margin-top que cubra a barra de navegação */
 .main,
 section.main,
 [data-testid="stMain"] {
