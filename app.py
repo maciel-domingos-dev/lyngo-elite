@@ -2237,147 +2237,122 @@ div[data-baseweb="form-control"] label {
 
 st.markdown(CYBER_CSS, unsafe_allow_html=True)
 
-# ── CSS Mobile Premium — complementa CYBER_CSS com correções para Android/iOS ──
+# ── CSS Responsivo — Desktop amplo / Mobile empilhado ────────────────────────
 st.markdown("""
 <style>
 
 /* ══════════════════════════════════════════════════════
-   LOGO — encolhe proporcionalmente em qualquer tela
+   DESKTOP (>768px) — garante layout amplo e profissional
+   Restaura explicitamente qualquer propriedade que possa
+   ter sido forçada por regras genéricas.
    ══════════════════════════════════════════════════════ */
-[data-testid="stSidebar"] svg,
-[data-testid="stSidebar"] img {
-    max-width: 100% !important;
-    height: auto !important;
-}
-/* Wrapper centralizado do logo no sidebar */
-[data-testid="stSidebar"] div[style*="display:flex"][style*="justify-content:center"] {
-    padding: 0.4rem 0.5rem 0.1rem 0.5rem !important;
+@media (min-width: 769px) {
+    /* Colunas lado a lado — nunca empilhar no desktop */
+    [data-testid="column"],
+    [data-testid="stColumn"] {
+        width: unset !important;
+        flex: unset !important;
+        min-width: unset !important;
+    }
+    /* Containers com largura normal */
+    [data-testid="stHorizontalBlock"],
+    [data-testid="stColumns"] {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
+    /* DataFrames sem display forçado */
+    [data-testid="stDataFrame"],
+    [data-testid="stTable"],
+    .stDataFrame, .stTable {
+        display: revert !important;
+        overflow-x: unset !important;
+    }
+    /* Logo: tamanho livre no sidebar desktop */
+    [data-testid="stSidebar"] svg,
+    [data-testid="stSidebar"] img {
+        max-width: 100%;
+        height: auto;
+    }
 }
 
 /* ══════════════════════════════════════════════════════
-   TABELAS — scroll horizontal sem quebrar layout
+   iOS anti-zoom — 16px impede zoom automático ao focar
+   (aplicado globalmente; não afeta visualmente o desktop)
    ══════════════════════════════════════════════════════ */
-[data-testid="stDataFrame"],
-[data-testid="stTable"],
-.stDataFrame,
-.stTable {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    display: block !important;
-}
-
-/* ══════════════════════════════════════════════════════
-   iOS — impede zoom automático ao focar inputs
-   ══════════════════════════════════════════════════════ */
-input, textarea, select,
-[data-testid="stTextInput"] input,
-[data-testid="stTextArea"] textarea,
-[data-testid="stNumberInput"] input,
-[data-testid="stChatInput"] textarea {
+input, textarea, select {
     font-size: 16px !important;
 }
 
 /* ══════════════════════════════════════════════════════
-   ATALHOS VIBEL — flex-wrap para empilhar no mobile
-   ══════════════════════════════════════════════════════ */
-[data-testid="stSidebar"] ~ * .btn-wrap-atalho,
-.btn-wrap-atalho {
-    display: contents !important;
-}
-
-/* ══════════════════════════════════════════════════════
-   MOBILE 768px — melhorias complementares
+   MOBILE 768px — empilha colunas, padding lateral 1rem
    ══════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
 
-    /* Auth container responsivo */
+    /* Container sem espaço desperdiçado nas laterais */
     .main .block-container {
         max-width: 95vw !important;
         width: 95vw !important;
-        padding: 1.4rem 1rem 1.6rem !important;
+        padding: 1rem !important;
     }
 
-    /* Tabelas com scroll lateral */
+    /* Tabelas com scroll horizontal */
     [data-testid="stDataFrame"],
-    [data-testid="stTable"] {
+    [data-testid="stTable"],
+    .stDataFrame, .stTable {
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch !important;
+        display: block !important;
     }
 
-    /* Inputs com 16px para iOS não dar zoom */
-    input, textarea,
+    /* Inputs 16px — reforço para iOS */
+    input, textarea, select,
     [data-testid="stTextInput"] input,
     [data-testid="stTextArea"] textarea,
-    [data-testid="stNumberInput"] input {
-        font-size: 16px !important;
-    }
-
-    /* Chat input no mobile */
+    [data-testid="stNumberInput"] input,
     [data-testid="stChatInput"] textarea {
         font-size: 16px !important;
     }
 
-    /* vivi-header menor no mobile */
-    .vivi-header {
-        padding: 0.6rem 0.85rem !important;
-        gap: 0.5rem !important;
-    }
-    .vivi-header-name {
-        font-size: 0.82rem !important;
-    }
-    .vivi-header-sub {
-        font-size: 0.65rem !important;
-    }
+    /* vivi-header compacto */
+    .vivi-header { padding: 0.6rem 0.85rem !important; gap: 0.5rem !important; }
+    .vivi-header-name { font-size: 0.82rem !important; }
+    .vivi-header-sub { font-size: 0.65rem !important; }
 
-    /* Sidebar logo max-width */
-    [data-testid="stSidebar"] svg {
-        max-width: 130px !important;
-        height: auto !important;
-    }
+    /* Logo sidebar */
+    [data-testid="stSidebar"] svg { max-width: 130px !important; height: auto !important; }
+    .main .block-container svg { max-width: 130px !important; height: auto !important; }
 
-    /* Logo na tela de auth */
-    .main .block-container svg {
-        max-width: 130px !important;
-        height: auto !important;
-    }
-
-    /* Atalhos VIBEL: 1 coluna + wrap */
+    /* Atalhos VIBEL: flex-wrap em 2 colunas */
     [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho),
-    [data-testid="stColumns"]:has(.btn-wrap-atalho) {
-        flex-wrap: wrap !important;
-    }
+    [data-testid="stColumns"]:has(.btn-wrap-atalho) { flex-wrap: wrap !important; }
     [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="stColumn"],
     [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="column"],
     [data-testid="stColumns"]:has(.btn-wrap-atalho) > [data-testid="column"] {
         min-width: 45% !important;
         flex: 1 1 45% !important;
     }
+    /* Botões de atalho: largura total no mobile */
+    .btn-wrap-atalho button,
+    .btn-wrap-atalho [data-baseweb="button"] {
+        width: 100% !important;
+    }
 
-    /* Textos de label menores */
-    label,
-    [data-testid="stWidgetLabel"],
-    [data-testid="stWidgetLabel"] p {
+    /* Labels menores */
+    label, [data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] p {
         font-size: 0.62rem !important;
         letter-spacing: 1.2px !important;
     }
+    [data-testid="stForm"] { padding: 0.9rem !important; }
 
-    /* Formulários sem padding excessivo */
-    [data-testid="stForm"] {
-        padding: 0.9rem !important;
-    }
-
-    /* Botão menu fixo mais acessível no polegar */
+    /* Botão menu fixo */
     #lg-menu-btn {
-        top: 0.6rem !important;
-        left: 0.6rem !important;
-        font-size: 0.8rem !important;
-        padding: 0.4rem 0.8rem !important;
+        top: 0.6rem !important; left: 0.6rem !important;
+        font-size: 0.8rem !important; padding: 0.4rem 0.8rem !important;
         border-radius: 6px !important;
     }
 
-    /* Titles compactos */
-    .lg-auth-title,
-    .page-title {
+    /* Títulos compactos */
+    .lg-auth-title, .page-title {
         font-size: 1.1rem !important;
         letter-spacing: 1px !important;
     }
@@ -2388,22 +2363,12 @@ input, textarea, select,
    ══════════════════════════════════════════════════════ */
 @media (max-width: 480px) {
 
-    .metric-grid {
-        grid-template-columns: 1fr !important;
-    }
-    .metric-card {
-        padding: 0.7rem 0.8rem !important;
-    }
+    .metric-grid { grid-template-columns: 1fr !important; }
+    .metric-card { padding: 0.7rem 0.8rem !important; }
+    .page-title { font-size: 1rem !important; }
 
-    .page-title {
-        font-size: 1rem !important;
-    }
-
-    /* Sidebar ocupa tela toda em modo drawer */
-    [data-testid="stSidebar"] {
-        min-width: 90vw !important;
-        max-width: 90vw !important;
-    }
+    /* Sidebar em modo drawer ocupa quase tela inteira */
+    [data-testid="stSidebar"] { min-width: 90vw !important; max-width: 90vw !important; }
 
     /* Atalhos VIBEL: 1 por linha */
     [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="stColumn"],
@@ -2412,28 +2377,17 @@ input, textarea, select,
         min-width: 100% !important;
         flex: 1 1 100% !important;
     }
-    .btn-wrap-atalho button,
-    .btn-wrap-atalho [data-baseweb="button"] {
-        height: 40px !important;
-        min-height: 40px !important;
-        font-size: 10px !important;
+    .btn-wrap-atalho button, .btn-wrap-atalho [data-baseweb="button"] {
+        height: 40px !important; min-height: 40px !important; font-size: 10px !important;
     }
 
-    /* Auth card sem borda arredondada extrema */
+    /* Auth card */
     .main .block-container {
         border-radius: 10px !important;
         padding: 1.2rem 0.85rem 1.4rem !important;
     }
-
-    /* Chat input placeholder menor */
-    [data-testid="stChatInput"] textarea::placeholder {
-        font-size: 14px !important;
-    }
-
-    /* Panels sem padding excessivo */
-    .panel-card {
-        padding: 0.75rem 0.8rem !important;
-    }
+    [data-testid="stChatInput"] textarea::placeholder { font-size: 14px !important; }
+    .panel-card { padding: 0.75rem 0.8rem !important; }
 }
 
 </style>
@@ -2884,8 +2838,10 @@ body:has([data-testid="stSidebar"][aria-expanded="true"]) #lg-menu-btn { display
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DASHBOARD
+# Container principal — gera .st-key-main_layout no DOM para CSS targeting
 # ─────────────────────────────────────────────────────────────────────────────
+_main_layout = st.container(key="main_layout")
+
 if page == "Dashboard":
     st.markdown('<div class="page-title">Dashboard</div>', unsafe_allow_html=True)
     st.markdown('<div class="page-subtitle">Visão geral da sua operação</div>', unsafe_allow_html=True)
@@ -4094,3 +4050,103 @@ elif page == "Configurações":
         </div>
         """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
+
+# ═════════════════════════════════════════════════════════════════════════════
+# CSS TERMINAL — injetado APÓS todo o conteúdo da página.
+# Último a ser parseado → ganha a cascata.
+# Especificidade máxima via [data-testid="stAppViewContainer"] + .st-key-main_layout
+# ═════════════════════════════════════════════════════════════════════════════
+st.markdown("""
+<style>
+
+/* ── DESKTOP (>768px): layout amplo, colunas LADO A LADO ──────────────────── */
+@media (min-width: 769px) {
+
+    /* Container: max 1200px, respira sem forçar largura total */
+    [data-testid="stAppViewContainer"] .block-container,
+    [data-testid="stAppViewContainer"] [data-testid="stMain"] .block-container {
+        max-width: 1200px !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+
+    /* Bloco horizontal: sempre linha, nunca empilhar */
+    [data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"],
+    [data-testid="stAppViewContainer"] [data-testid="stColumns"] {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: flex-start !important;
+    }
+
+    /* Colunas: deixa o Streamlit calcular o flex (unset remove nosso override) */
+    [data-testid="stAppViewContainer"] [data-testid="stColumn"],
+    [data-testid="stAppViewContainer"] [data-testid="column"],
+    .st-key-main_layout [data-testid="stColumn"],
+    .st-key-main_layout [data-testid="column"] {
+        width: unset !important;
+        flex: unset !important;
+        min-width: unset !important;
+    }
+}
+
+/* ── MOBILE (<=768px): empilha colunas, padding 1rem ──────────────────────── */
+@media (max-width: 768px) {
+
+    /* Container: 100% da viewport, sem padding desperdiçado */
+    [data-testid="stAppViewContainer"] .block-container,
+    [data-testid="stAppViewContainer"] [data-testid="stMain"] .block-container,
+    .st-key-main_layout .block-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 1rem !important;
+    }
+
+    /* Blocos horizontais viram colunas */
+    [data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"],
+    [data-testid="stAppViewContainer"] [data-testid="stColumns"],
+    .st-key-main_layout [data-testid="stHorizontalBlock"],
+    .st-key-main_layout [data-testid="stColumns"] {
+        flex-direction: column !important;
+        flex-wrap: wrap !important;
+        gap: 0.75rem !important;
+    }
+
+    /* Cada coluna ocupa 100% da largura */
+    [data-testid="stAppViewContainer"] [data-testid="stColumn"],
+    [data-testid="stAppViewContainer"] [data-testid="column"],
+    .st-key-main_layout [data-testid="stColumn"],
+    .st-key-main_layout [data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Botões: largura total no mobile */
+    [data-testid="stAppViewContainer"] .stButton > button,
+    .st-key-main_layout .stButton > button {
+        width: 100% !important;
+    }
+
+    /* Formulários sem padding excessivo */
+    [data-testid="stAppViewContainer"] [data-testid="stForm"],
+    .st-key-main_layout [data-testid="stForm"] {
+        padding: 0.9rem !important;
+    }
+}
+
+/* ── MOBILE PEQUENO (<=480px) ─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+
+    [data-testid="stAppViewContainer"] .block-container {
+        padding: 0.75rem !important;
+    }
+
+    [data-testid="stSidebar"] {
+        min-width: 90vw !important;
+        max-width: 90vw !important;
+    }
+}
+
+</style>
+""", unsafe_allow_html=True)
