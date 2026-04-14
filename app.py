@@ -848,7 +848,10 @@ html, body, [data-testid="stAppViewContainer"],
 }
 
 /* ── Labels: serão reforçadas após todos os outros estilos (ver bloco abaixo) ── */
-[data-testid="stHeader"] { background: transparent !important; }
+[data-testid="stHeader"] {
+    background: transparent !important;
+    pointer-events: none !important; /* não bloquear cliques no botão de menu abaixo */
+}
 
 /* ── Sidebar ── */
 [data-testid="stSidebar"] {
@@ -2848,13 +2851,29 @@ page = st.session_state.page
 # ── Fallback: botão para reabrir menu se sidebar sumir ────────────────────────
 st.markdown("""
 <style>
-#lg-menu-btn { position:fixed; top:0.4rem; left:0.4rem; z-index:99999;
-    background:transparent; border:1px solid rgba(0,245,255,0.35);
-    border-radius:4px; color:#00f5ff; font-size:0.7rem; padding:0.2rem 0.5rem;
-    cursor:pointer; font-family:'Rajdhani',sans-serif; letter-spacing:1px; }
-#lg-menu-btn:hover { background:rgba(0,245,255,0.12); box-shadow:0 0 8px rgba(0,245,255,0.4); }
+#lg-menu-btn {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 9999999; /* acima de tudo — header, sidebar, toast */
+    background: transparent;
+    border: 1px solid rgba(0,245,255,0.45);
+    border-radius: 6px;
+    color: #00f5ff;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.7rem;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 1px;
+    pointer-events: auto !important; /* nunca bloquear */
+    touch-action: manipulation;      /* evita delay de 300ms no iOS */
+    -webkit-tap-highlight-color: rgba(0,245,255,0.2);
+    user-select: none;
+}
+#lg-menu-btn:hover,
+#lg-menu-btn:active { background: rgba(0,245,255,0.12); box-shadow: 0 0 10px rgba(0,245,255,0.4); }
 /* Oculta o botão se sidebar estiver visível e expandida */
-body:has([data-testid="stSidebar"][aria-expanded="true"]) #lg-menu-btn { display:none; }
+body:has([data-testid="stSidebar"][aria-expanded="true"]) #lg-menu-btn { display: none; }
 </style>
 <button id="lg-menu-btn" onclick="
     var sb = document.querySelector('[data-testid=\\'stSidebar\\']');
@@ -4085,6 +4104,24 @@ elif page == "Configurações":
 # ═════════════════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
+
+/* ── Botão nativo de colapso da sidebar — z-index máximo em qualquer tela ──── */
+[data-testid="stSidebarCollapseButton"] {
+    z-index: 9999999 !important;
+    position: relative !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+}
+/* Header Streamlit: transparente e invisível para cliques */
+[data-testid="stHeader"] {
+    pointer-events: none !important;
+}
+/* .main sem margin-top negativo que cubra a barra de navegação */
+.main,
+section.main,
+[data-testid="stMain"] {
+    margin-top: 0 !important;
+}
 
 /* ── DESKTOP (>768px): layout amplo, colunas LADO A LADO ──────────────────── */
 @media (min-width: 769px) {
