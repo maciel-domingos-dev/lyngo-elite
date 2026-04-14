@@ -383,7 +383,7 @@ input[type="text"], input[type="password"], input[type="email"] {
     border: 1px solid rgba(168,85,247,0.55) !important;
     border-radius: 8px !important;
     color: #d8e8ff !important;
-    font-size: 0.95rem !important;
+    font-size: 16px !important;
     font-family: 'Rajdhani', sans-serif !important;
     letter-spacing: 0.5px !important;
     padding: 0.55rem 0.9rem !important;
@@ -2194,6 +2194,210 @@ div[data-baseweb="form-control"] label {
 """
 
 st.markdown(CYBER_CSS, unsafe_allow_html=True)
+
+# ── CSS Mobile Premium — complementa CYBER_CSS com correções para Android/iOS ──
+st.markdown("""
+<style>
+
+/* ══════════════════════════════════════════════════════
+   LOGO — encolhe proporcionalmente em qualquer tela
+   ══════════════════════════════════════════════════════ */
+[data-testid="stSidebar"] svg,
+[data-testid="stSidebar"] img {
+    max-width: 100% !important;
+    height: auto !important;
+}
+/* Wrapper centralizado do logo no sidebar */
+[data-testid="stSidebar"] div[style*="display:flex"][style*="justify-content:center"] {
+    padding: 0.4rem 0.5rem 0.1rem 0.5rem !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   TABELAS — scroll horizontal sem quebrar layout
+   ══════════════════════════════════════════════════════ */
+[data-testid="stDataFrame"],
+[data-testid="stTable"],
+.stDataFrame,
+.stTable {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: block !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   iOS — impede zoom automático ao focar inputs
+   ══════════════════════════════════════════════════════ */
+input, textarea, select,
+[data-testid="stTextInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-testid="stNumberInput"] input,
+[data-testid="stChatInput"] textarea {
+    font-size: 16px !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   ATALHOS VIBEL — flex-wrap para empilhar no mobile
+   ══════════════════════════════════════════════════════ */
+[data-testid="stSidebar"] ~ * .btn-wrap-atalho,
+.btn-wrap-atalho {
+    display: contents !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE 768px — melhorias complementares
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* Auth container responsivo */
+    .main .block-container {
+        max-width: 95vw !important;
+        width: 95vw !important;
+        padding: 1.4rem 1rem 1.6rem !important;
+    }
+
+    /* Tabelas com scroll lateral */
+    [data-testid="stDataFrame"],
+    [data-testid="stTable"] {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* Inputs com 16px para iOS não dar zoom */
+    input, textarea,
+    [data-testid="stTextInput"] input,
+    [data-testid="stTextArea"] textarea,
+    [data-testid="stNumberInput"] input {
+        font-size: 16px !important;
+    }
+
+    /* Chat input no mobile */
+    [data-testid="stChatInput"] textarea {
+        font-size: 16px !important;
+    }
+
+    /* Metric grid: uma coluna só em telas muito pequenas */
+    @media (max-width: 480px) {
+        .metric-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
+    /* vivi-header menor no mobile */
+    .vivi-header {
+        padding: 0.6rem 0.85rem !important;
+        gap: 0.5rem !important;
+    }
+    .vivi-header-name {
+        font-size: 0.82rem !important;
+    }
+    .vivi-header-sub {
+        font-size: 0.65rem !important;
+    }
+
+    /* Sidebar logo max-width */
+    [data-testid="stSidebar"] svg {
+        max-width: 130px !important;
+        height: auto !important;
+    }
+
+    /* Logo na tela de auth */
+    .main .block-container svg {
+        max-width: 130px !important;
+        height: auto !important;
+    }
+
+    /* Atalhos VIBEL: 1 coluna + wrap */
+    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) {
+        flex-wrap: wrap !important;
+    }
+    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="stColumn"] {
+        min-width: 45% !important;
+        flex: 1 1 45% !important;
+    }
+
+    /* Textos de label menores */
+    label,
+    [data-testid="stWidgetLabel"],
+    [data-testid="stWidgetLabel"] p {
+        font-size: 0.62rem !important;
+        letter-spacing: 1.2px !important;
+    }
+
+    /* Formulários sem padding excessivo */
+    [data-testid="stForm"] {
+        padding: 0.9rem !important;
+    }
+
+    /* Botão menu fixo mais acessível no polegar */
+    #lg-menu-btn {
+        top: 0.6rem !important;
+        left: 0.6rem !important;
+        font-size: 0.8rem !important;
+        padding: 0.4rem 0.8rem !important;
+        border-radius: 6px !important;
+    }
+
+    /* Titles compactos */
+    .lg-auth-title,
+    .page-title {
+        font-size: 1.1rem !important;
+        letter-spacing: 1px !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE 480px — telefones pequenos
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+
+    .metric-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .metric-card {
+        padding: 0.7rem 0.8rem !important;
+    }
+
+    .page-title {
+        font-size: 1rem !important;
+    }
+
+    /* Sidebar ocupa tela toda em modo drawer */
+    [data-testid="stSidebar"] {
+        min-width: 90vw !important;
+        max-width: 90vw !important;
+    }
+
+    /* Atalhos VIBEL: 1 por linha */
+    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="stColumn"] {
+        min-width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+    .btn-wrap-atalho button,
+    .btn-wrap-atalho [data-baseweb="button"] {
+        height: 40px !important;
+        min-height: 40px !important;
+        font-size: 10px !important;
+    }
+
+    /* Auth card sem borda arredondada extrema */
+    .main .block-container {
+        border-radius: 10px !important;
+        padding: 1.2rem 0.85rem 1.4rem !important;
+    }
+
+    /* Chat input placeholder menor */
+    [data-testid="stChatInput"] textarea::placeholder {
+        font-size: 14px !important;
+    }
+
+    /* Panels sem padding excessivo */
+    .panel-card {
+        padding: 0.75rem 0.8rem !important;
+    }
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # ── CSS nuclear — sobrescreve BaseWeb do Streamlit ────────────────────────────
 st.markdown("""
