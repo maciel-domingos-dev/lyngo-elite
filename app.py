@@ -2015,25 +2015,44 @@ footer     { visibility: hidden; }
         z-index: 999 !important;
     }
 }
-/* No mobile: sidebar começa recolhida, abre como drawer sobre o conteúdo */
+/* No mobile: sidebar controlada por body.lg-sidebar-open (JS independente do Streamlit) */
 @media (max-width: 768px) {
-    [data-testid="stSidebar"][aria-expanded="false"] {
-        transform: translateX(-100%) !important;
-        visibility: hidden !important;
+    /* Animação suave */
+    [data-testid="stSidebar"] {
+        transition: transform 0.26s cubic-bezier(0.4,0,0.2,1),
+                    visibility 0.26s linear !important;
     }
-    [data-testid="stSidebar"][aria-expanded="true"] {
+    /* FECHADA por padrão */
+    body:not(.lg-sidebar-open) [data-testid="stSidebar"] {
+        transform: translateX(-110%) !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+    /* ABERTA: overlay fixo sobre o conteúdo */
+    body.lg-sidebar-open [data-testid="stSidebar"] {
         transform: translateX(0) !important;
         visibility: visible !important;
+        pointer-events: auto !important;
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         height: 100dvh !important;
-        z-index: 99999 !important;
-        min-width: 80vw !important;
+        z-index: 999999 !important;
+        min-width: 78vw !important;
         max-width: 85vw !important;
-        box-shadow: 4px 0 24px rgba(0,0,0,0.7) !important;
+        overflow-y: auto !important;
+        box-shadow: 6px 0 40px rgba(0,0,0,0.85) !important;
     }
-    /* Padding-top para não ficar atrás do botão de menu fixo */
+    /* Backdrop escuro quando aberta */
+    body.lg-sidebar-open::after {
+        content: '' !important;
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(3,5,8,0.55) !important;
+        z-index: 999998 !important;
+        pointer-events: none !important;
+    }
+    /* Padding-top no conteúdo para o botão de menu fixo */
     .main .block-container,
     [data-testid="stMain"] .block-container {
         padding-top: 3.5rem !important;
@@ -2855,7 +2874,7 @@ st.markdown("""
     position: fixed;
     top: 0.5rem;
     left: 0.5rem;
-    z-index: 9999999; /* acima de tudo — header, sidebar, toast */
+    z-index: 9999999;
     background: transparent;
     border: 1px solid rgba(0,245,255,0.45);
     border-radius: 6px;
@@ -2865,22 +2884,40 @@ st.markdown("""
     cursor: pointer;
     font-family: 'Rajdhani', sans-serif;
     letter-spacing: 1px;
-    pointer-events: auto !important; /* nunca bloquear */
-    touch-action: manipulation;      /* evita delay de 300ms no iOS */
+    pointer-events: auto !important;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: rgba(0,245,255,0.2);
     user-select: none;
+    display: block;
 }
-#lg-menu-btn:hover,
-#lg-menu-btn:active { background: rgba(0,245,255,0.12); box-shadow: 0 0 10px rgba(0,245,255,0.4); }
-/* Oculta o botão se sidebar estiver visível e expandida */
-body:has([data-testid="stSidebar"][aria-expanded="true"]) #lg-menu-btn { display: none; }
+#lg-menu-btn:active { background: rgba(0,245,255,0.18); }
+/* Oculta quando sidebar está aberta (controlado por classe no body) */
+body.lg-sidebar-open #lg-menu-btn { display: none !important; }
 </style>
-<button id="lg-menu-btn" onclick="
-    var sb = document.querySelector('[data-testid=\\'stSidebar\\']');
-    var btn = document.querySelector('[data-testid=\\'stSidebarCollapseButton\\']')
-           || document.querySelector('[data-testid=\\'collapsedControl\\'] button');
-    if(btn) btn.click();
-" title="Abrir Menu">☰ MENU</button>
+<button id="lg-menu-btn" onclick="lgMenuToggle()" title="Abrir Menu">☰ MENU</button>
+<script>
+/* ── Controle do menu mobile via classe no body ── */
+function lgMenuToggle() {
+    document.body.classList.toggle('lg-sidebar-open');
+}
+/* Fechar ao tocar fora da sidebar */
+document.addEventListener('click', function(e) {
+    if (!document.body.classList.contains('lg-sidebar-open')) return;
+    var sb  = document.querySelector('[data-testid="stSidebar"]');
+    var btn = document.getElementById('lg-menu-btn');
+    if (sb && !sb.contains(e.target) && (!btn || !btn.contains(e.target))) {
+        document.body.classList.remove('lg-sidebar-open');
+    }
+}, true);
+/* Fechar ao navegar (clicar em botão de navegação na sidebar) */
+document.addEventListener('click', function(e) {
+    if (!document.body.classList.contains('lg-sidebar-open')) return;
+    var sb = document.querySelector('[data-testid="stSidebar"]');
+    if (sb && sb.contains(e.target) && e.target.closest('button')) {
+        setTimeout(function() { document.body.classList.remove('lg-sidebar-open'); }, 120);
+    }
+});
+</script>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -4153,7 +4190,7 @@ section.main,
     }
 }
 
-/* ── MOBILE (<=768px): sidebar como drawer, conteúdo em coluna única ────────── */
+/* ── MOBILE (<=768px): sidebar como drawer controlado por body.lg-sidebar-open ─ */
 @media (max-width: 768px) {
 
     /* App container: coluna única — sidebar não empurra o conteúdo */
@@ -4161,17 +4198,17 @@ section.main,
         flex-direction: column !important;
     }
 
-    /* Sidebar RECOLHIDA: desliza para fora da tela */
-    [data-testid="stAppViewContainer"] [data-testid="stSidebar"][aria-expanded="false"],
-    [data-testid="stSidebar"][aria-expanded="false"] {
-        transform: translateX(-100%) !important;
+    /* Sidebar FECHADA (especificidade máxima) */
+    body:not(.lg-sidebar-open) [data-testid="stAppViewContainer"] [data-testid="stSidebar"],
+    body:not(.lg-sidebar-open) [data-testid="stSidebar"] {
+        transform: translateX(-110%) !important;
         visibility: hidden !important;
         pointer-events: none !important;
     }
 
-    /* Sidebar ABERTA: overlay fixo sobre o conteúdo */
-    [data-testid="stAppViewContainer"] [data-testid="stSidebar"][aria-expanded="true"],
-    [data-testid="stSidebar"][aria-expanded="true"] {
+    /* Sidebar ABERTA */
+    body.lg-sidebar-open [data-testid="stAppViewContainer"] [data-testid="stSidebar"],
+    body.lg-sidebar-open [data-testid="stSidebar"] {
         transform: translateX(0) !important;
         visibility: visible !important;
         pointer-events: auto !important;
@@ -4179,10 +4216,10 @@ section.main,
         top: 0 !important;
         left: 0 !important;
         height: 100dvh !important;
-        z-index: 99999 !important;
+        z-index: 999999 !important;
         min-width: 78vw !important;
         max-width: 85vw !important;
-        box-shadow: 6px 0 32px rgba(0,0,0,0.8), 0 0 0 100vw rgba(0,0,0,0.45) !important;
+        overflow-y: auto !important;
     }
 
     /* Conteúdo principal: largura total, padding-top para o botão de menu */
@@ -4191,7 +4228,7 @@ section.main,
     .st-key-main_layout .block-container {
         max-width: 100% !important;
         width: 100% !important;
-        padding: 3.5rem 1rem 1rem 1rem !important; /* top extra para o botão #lg-menu-btn */
+        padding: 3.5rem 1rem 1rem 1rem !important;
     }
 
     /* Blocos horizontais viram colunas */
