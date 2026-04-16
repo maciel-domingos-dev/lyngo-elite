@@ -4190,13 +4190,25 @@ section.main .block-container,
     /* Sidebar aberta em telas pequenas: manter 300px definido globalmente */
 }
 
+/* ── Nenhum container do conteúdo principal cria contexto de empilhamento ── */
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+section.main,
+.main,
+.block-container,
+[data-testid="stVerticalBlock"] {
+    z-index: auto !important;
+    isolation: auto !important;
+}
+
 /* ── Botão flutuante de expandir sidebar (desktop only) ─────────────────── */
 #lg-sidebar-expand-btn {
     display: none;
     position: fixed;
     top: 12px;
     left: 12px;
-    z-index: 99999999;
+    z-index: 2147483647;
+    pointer-events: auto !important;
     width: 36px;
     height: 36px;
     align-items: center;
@@ -4271,6 +4283,10 @@ st.markdown("""
         // Sidebar recolhida tem largura < 50px (geralmente 0 ou muito pequena)
         expandBtn.style.display = (width < 50) ? 'flex' : 'none';
     }
+
+    // Move o botão para filho direto do body, saindo de qualquer
+    // contexto de empilhamento criado pelo Streamlit
+    document.body.appendChild(expandBtn);
 
     // Verifica continuamente a largura da sidebar
     setInterval(syncBtn, 300);
