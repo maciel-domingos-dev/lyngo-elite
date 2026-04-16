@@ -4199,19 +4199,34 @@ section[data-testid="stSidebar"][aria-expanded="true"] {
     background-color: rgba(255, 255, 255, 0.1) !important;
     border-radius: 5px !important;
 }
-/* Header Streamlit: transparente e não bloqueia cliques na área geral */
-[data-testid="stHeader"] {
-    background: transparent !important;
-    pointer-events: none !important;
+/* ── DESKTOP (≥769px): header oculto — sidebar controlada pelo botão interno ─ */
+@media (min-width: 769px) {
+    [data-testid="stHeader"] {
+        display: none !important;
+    }
+    /* Botão menu customizado também escondido no desktop */
+    #lg-menu-btn {
+        display: none !important;
+    }
 }
-/* Mas qualquer botão/link DENTRO do header continua clicável */
-[data-testid="stHeader"] button,
-[data-testid="stHeader"] a,
-[data-testid="stHeader"] [data-testid="collapsedControl"],
-[data-testid="stHeader"] [data-testid="stSidebarCollapseButton"],
-[data-testid="stHeader"] [data-testid="stSidebarNavCollapsedControl"] {
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
+
+/* ── MOBILE (≤768px): header visível, transparente, não bloqueia toques ──── */
+@media (max-width: 768px) {
+    [data-testid="stHeader"] {
+        z-index: 999999 !important;
+        background: transparent !important;
+        pointer-events: none !important; /* container não captura toque */
+    }
+    /* Botões dentro do header recebem clique normalmente */
+    [data-testid="stHeader"] button,
+    [data-testid="stHeader"] a,
+    [data-testid="stHeader"] [data-testid="collapsedControl"],
+    [data-testid="stHeader"] [data-testid="stSidebarCollapseButton"],
+    [data-testid="stHeader"] [data-testid="stSidebarNavCollapsedControl"] {
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        z-index: 9999999 !important;
+    }
 }
 /* .main sem margin-top que cubra a barra de navegação */
 .main,
@@ -4222,6 +4237,12 @@ section.main,
 
 /* ── DESKTOP (>768px): layout amplo, colunas LADO A LADO ──────────────────── */
 @media (min-width: 769px) {
+
+    /* Sidebar sempre visível no desktop — botão interno (seta) controla colapso */
+    [data-testid="stSidebar"] {
+        display: block !important;
+        visibility: visible !important;
+    }
 
     /* Container: max 1200px, respira sem forçar largura total */
     [data-testid="stAppViewContainer"] .block-container,
