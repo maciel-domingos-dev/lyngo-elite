@@ -161,7 +161,7 @@ st.set_page_config(
     page_title="Lyngo Elite",
     page_icon="🔗",
     layout="centered",
-    initial_sidebar_state="auto",
+    initial_sidebar_state="expanded",
 )
 
 # ── CSS Crítico Mobile — injetado imediatamente após set_page_config ──────────
@@ -4021,11 +4021,19 @@ section[data-testid="stSidebar"] {
     visibility: visible !important;
 }
 
-/* Botão nativo de abrir menu (hambúrguer) — destaque visual leve */
+/* Cor ciano nos SVGs de abrir/fechar sidebar (seta e hambúrguer nativo) */
+[data-testid="stSidebarNav"] svg,
+button[kind="header"] svg,
+[data-testid="stSidebarCollapseButton"] svg,
+[data-testid="collapsedControl"] svg {
+    fill: #00f2ff !important;
+    color: #00f2ff !important;
+}
+
+/* Botão do cabeçalho: destaque visual e clicável */
 .st-emotion-cache-18ni7ap {
-    background-color: rgba(0, 255, 255, 0.2) !important;
+    background-color: rgba(0, 242, 255, 0.1) !important;
     border-radius: 8px !important;
-    margin: 5px !important;
 }
 
 /* ── Botão nativo de colapso/hamburger — forçar visível e clicável ─────────── */
@@ -4092,11 +4100,12 @@ section.main,
 /* ── MOBILE (<=768px) ─────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
 
-    /* Sidebar: fundo sólido para não vazar texto, posicionada acima do dashboard */
-    [data-testid="stSidebar"] {
+    /* Sidebar: fundo sólido + 280px + acima do dashboard */
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"] {
         background-color: #0E1117 !important;
         z-index: 1000000 !important;
-        width: 80vw !important;
+        width: 280px !important;
     }
 
     /* Conteúdo principal: largura total */
