@@ -4080,6 +4080,14 @@ button[kind="header"] {
 section.main,
 [data-testid="stMain"] {
     margin-top: 0 !important;
+    z-index: auto !important;
+}
+.main .block-container,
+section.main .block-container,
+[data-testid="stMain"] .block-container,
+.block-container {
+    isolation: isolate;
+    z-index: auto !important;
 }
 
 /* ── DESKTOP (>768px): layout amplo, colunas LADO A LADO ──────────────────── */
@@ -4188,7 +4196,7 @@ section.main,
     position: fixed;
     top: 12px;
     left: 12px;
-    z-index: 9999999;
+    z-index: 99999999;
     width: 36px;
     height: 36px;
     align-items: center;
