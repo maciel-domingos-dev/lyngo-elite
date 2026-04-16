@@ -4046,41 +4046,30 @@ button[kind="header"] {
     border-radius: 8px !important;
 }
 
-/* ── collapsedControl e stSidebarCollapseButton: visíveis, neon, tamanho garantido ── */
-[data-testid="collapsedControl"],
-[data-testid="stSidebarCollapseButton"] {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    background-color: rgba(0, 242, 255, 0.08) !important;
-    border-radius: 8px !important;
-    padding: 4px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-[data-testid="collapsedControl"]:hover,
-[data-testid="stSidebarCollapseButton"]:hover {
-    background-color: rgba(0, 242, 255, 0.2) !important;
-    box-shadow: 0 0 10px rgba(0, 242, 255, 0.4) !important;
-}
-
-/* ── Botão nativo de colapso/hamburger — forçar visível e clicável ─────────── */
-[data-testid="stSidebarCollapseButton"],
-[data-testid="collapsedControl"],
-[data-testid="stSidebarNavCollapsedControl"] {
-    visibility: visible !important;
-    display: flex !important;
-    opacity: 1 !important;
-    z-index: 9999999 !important;
-    position: relative !important;
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border-radius: 5px !important;
+/* ── Desktop only: setas de abrir/fechar sidebar visíveis e funcionando ─────── */
+@media (min-width: 769px) {
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="stSidebarNavCollapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 9999999 !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        background-color: rgba(0, 242, 255, 0.08) !important;
+        border-radius: 8px !important;
+        padding: 4px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    [data-testid="collapsedControl"]:hover,
+    [data-testid="stSidebarCollapseButton"]:hover {
+        background-color: rgba(0, 242, 255, 0.2) !important;
+        box-shadow: 0 0 10px rgba(0, 242, 255, 0.4) !important;
+    }
 }
 /* Header: transparente, todos os elementos nativos clicáveis */
 [data-testid="stHeader"] {
@@ -4193,5 +4182,110 @@ section.main,
     /* Sidebar aberta em telas pequenas: manter 300px definido globalmente */
 }
 
+/* ── Botão flutuante de expandir sidebar (desktop only) ─────────────────── */
+#lg-sidebar-expand-btn {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 9999999;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 242, 255, 0.08);
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+#lg-sidebar-expand-btn:hover {
+    background-color: rgba(0, 242, 255, 0.2);
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.4);
+}
+#lg-sidebar-expand-btn svg {
+    fill: #00f2ff;
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+}
+@media (max-width: 768px) {
+    #lg-sidebar-expand-btn { display: none !important; }
+}
+
 </style>
+""", unsafe_allow_html=True)
+
+# ── JS: botão flutuante para re-expandir sidebar quando recolhida (desktop) ──
+st.markdown("""
+<button id="lg-sidebar-expand-btn" title="Expandir menu" aria-label="Expandir menu">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 5l7 7-7 7" stroke="#00f2ff" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+</button>
+<script>
+(function() {
+    if (window._lgExpandBtnInit) return;
+    window._lgExpandBtnInit = true;
+
+    var expandBtn = document.getElementById('lg-sidebar-expand-btn');
+    if (!expandBtn) return;
+
+    /* Clique: dispara o controle nativo do Streamlit */
+    expandBtn.addEventListener('click', function() {
+        /* Tenta collapsedControl primeiro (aparece fora da sidebar) */
+        var ctrl = document.querySelector('[data-testid="collapsedControl"] button')
+                || document.querySelector('[data-testid="collapsedControl"]')
+                || document.querySelector('[data-testid="stSidebarNavCollapsedControl"] button')
+                || document.querySelector('[data-testid="stSidebarNavCollapsedControl"]');
+        if (ctrl) {
+            ctrl.click();
+            return;
+        }
+        /* Fallback: botão dentro da sidebar (stSidebarCollapseButton) */
+        var colBtn = document.querySelector('[data-testid="stSidebarCollapseButton"] button')
+                  || document.querySelector('[data-testid="stSidebarCollapseButton"]');
+        if (colBtn) colBtn.click();
+    });
+
+    /* Observa aria-expanded na sidebar para mostrar/ocultar o botão */
+    function syncBtn() {
+        var sidebar = document.querySelector('[data-testid="stSidebar"]');
+        if (!sidebar) return;
+        var expanded = sidebar.getAttribute('aria-expanded');
+        /* No desktop: mostra o >> apenas quando sidebar está recolhida */
+        if (window.innerWidth > 768) {
+            expandBtn.style.display = (expanded === 'false') ? 'flex' : 'none';
+        } else {
+            expandBtn.style.display = 'none';
+        }
+    }
+
+    /* Roda na carga inicial */
+    syncBtn();
+
+    /* Observa mudanças no aria-expanded */
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+            if (m.attributeName === 'aria-expanded') syncBtn();
+        });
+    });
+
+    function attachObserver() {
+        var sidebar = document.querySelector('[data-testid="stSidebar"]');
+        if (sidebar) {
+            observer.observe(sidebar, { attributes: true, attributeFilter: ['aria-expanded'] });
+            syncBtn();
+        } else {
+            setTimeout(attachObserver, 200);
+        }
+    }
+    attachObserver();
+
+    /* Também re-sincroniza no resize */
+    window.addEventListener('resize', syncBtn);
+})();
+</script>
 """, unsafe_allow_html=True)
