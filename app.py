@@ -161,7 +161,7 @@ st.set_page_config(
     page_title="Lyngo Elite",
     page_icon="🔗",
     layout="centered",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="auto",
 )
 
 # ── CSS Crítico Mobile — injetado imediatamente após set_page_config ──────────
@@ -850,7 +850,6 @@ html, body, [data-testid="stAppViewContainer"],
 /* ── Labels: serão reforçadas após todos os outros estilos (ver bloco abaixo) ── */
 [data-testid="stHeader"] {
     background: transparent !important;
-    pointer-events: none !important; /* não bloquear cliques no botão de menu abaixo */
 }
 
 /* ── Sidebar ── */
@@ -2012,58 +2011,17 @@ footer     { visibility: hidden; }
         z-index: 999 !important;
     }
 }
-/* No mobile: sidebar controlada por body.lg-sidebar-open (JS independente do Streamlit) */
-@media (max-width: 768px) {
-    /* Animação suave */
-    [data-testid="stSidebar"] {
-        transition: transform 0.26s cubic-bezier(0.4,0,0.2,1),
-                    visibility 0.26s linear !important;
-    }
-    /* FECHADA por padrão */
-    body:not(.lg-sidebar-open) [data-testid="stSidebar"] {
-        transform: translateX(-110%) !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-    }
-    /* ABERTA: overlay fixo sobre o conteúdo — Streamlit controla a largura */
-    body.lg-sidebar-open [data-testid="stSidebar"] {
-        transform: translateX(0) !important;
-        visibility: visible !important;
-        display: block !important;
-        pointer-events: auto !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        height: 100dvh !important;
-        z-index: 999999 !important;
-        overflow-y: auto !important;
-        box-shadow: 6px 0 40px rgba(0,0,0,0.85) !important;
-    }
-    /* Backdrop escuro quando aberta */
-    body.lg-sidebar-open::after {
-        content: '' !important;
-        position: fixed !important;
-        inset: 0 !important;
-        background: rgba(3,5,8,0.55) !important;
-        z-index: 999998 !important;
-        pointer-events: none !important;
-    }
-    /* Padding-top no conteúdo para o botão de menu fixo */
-    .main .block-container,
-    [data-testid="stMain"] .block-container {
-        padding-top: 3.5rem !important;
-    }
-}
-/* Ícone da seta */
+/* Mobile: sidebar gerenciada nativamente pelo Streamlit */
+/* Ícones: seta (desktop) e X (mobile) — cor ciano visível no tema escuro */
 [data-testid="stSidebarCollapseButton"] svg,
 [data-testid="collapsedControl"] svg {
-    fill: rgba(0,245,255,0.5) !important;
+    fill: #00f2ff !important;
     transition: fill 0.2s !important;
 }
 [data-testid="stSidebarCollapseButton"]:hover svg,
 [data-testid="collapsedControl"]:hover svg {
-    fill: #00f5ff !important;
-    filter: drop-shadow(0 0 4px rgba(0,245,255,0.6)) !important;
+    fill: #00f2ff !important;
+    filter: drop-shadow(0 0 6px rgba(0,242,255,0.7)) !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -2262,13 +2220,6 @@ div[data-baseweb="form-control"] label {
         padding: 0.1rem 0.45rem !important;
     }
 
-    /* ── Botão menu fixo: mais visível ── */
-    #lg-menu-btn {
-        font-size: 0.72rem !important;
-        padding: 0.3rem 0.65rem !important;
-        top: 0.5rem !important;
-        left: 0.5rem !important;
-    }
 }
 </style>
 """
@@ -2381,13 +2332,6 @@ input, textarea, select {
         letter-spacing: 1.2px !important;
     }
     [data-testid="stForm"] { padding: 0.9rem !important; }
-
-    /* Botão menu fixo */
-    #lg-menu-btn {
-        top: 0.6rem !important; left: 0.6rem !important;
-        font-size: 0.8rem !important; padding: 0.4rem 0.8rem !important;
-        border-radius: 6px !important;
-    }
 
     /* Títulos compactos */
     .lg-auth-title, .page-title {
@@ -2793,20 +2737,6 @@ with st.sidebar:
 (function() {{
     var active = {repr(_active_page)};
 
-    /* ── Força sidebar expandida apenas no desktop ── */
-    function forceExpand() {{
-        if (window.innerWidth <= 768) return; /* mobile: não forçar — sidebar é drawer */
-        var sb = document.querySelector('[data-testid="stSidebar"]');
-        if (!sb) return;
-        /* Se estiver colapsada, clica no botão de colapso para reabrir */
-        if (sb.getAttribute('aria-expanded') === 'false') {{
-            var btn = document.querySelector('[data-testid="stSidebarCollapseButton"]')
-                   || document.querySelector('[data-testid="collapsedControl"] button');
-            if (btn) btn.click();
-        }}
-    }}
-    setTimeout(forceExpand, 300);
-
     /* ── Marca botão ativo no menu ── */
     function markNav() {{
         var sb = document.querySelector('[data-testid="stSidebar"]');
@@ -2856,84 +2786,6 @@ with st.sidebar:
 
 page = st.session_state.page
 
-# ── Botão mobile: abre/fecha sidebar via classe no body ──────────────────────
-st.markdown("""
-<style>
-#lg-menu-btn {
-    position: fixed;
-    top: 0.5rem;
-    left: 0.5rem;
-    z-index: 9999999;
-    background: transparent;
-    border: 1px solid rgba(0,245,255,0.45);
-    border-radius: 6px;
-    color: #00f5ff;
-    font-size: 0.75rem;
-    padding: 0.35rem 0.7rem;
-    cursor: pointer;
-    font-family: 'Rajdhani', sans-serif;
-    letter-spacing: 1px;
-    pointer-events: auto !important;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: rgba(0,245,255,0.2);
-    user-select: none;
-    display: block;
-}
-#lg-menu-btn:active { background: rgba(0,245,255,0.18); }
-body.lg-sidebar-open #lg-menu-btn { display: none !important; }
-</style>
-<button id="lg-menu-btn" title="Abrir Menu">☰ MENU</button>
-<script>
-/* ── Guard: registra listeners UMA ÚNICA VEZ, independente de re-renders ── */
-if (!window._lgMenuInit) {
-    window._lgMenuInit = true;
-
-    /* Função global de toggle */
-    window.lgMenuOpen = function() {
-        document.body.classList.add('lg-sidebar-open');
-    };
-    window.lgMenuClose = function() {
-        document.body.classList.remove('lg-sidebar-open');
-    };
-    window.lgMenuToggle = function() {
-        document.body.classList.toggle('lg-sidebar-open');
-    };
-
-    /* Fechar ao tocar fora da sidebar — bubble phase (não capture) */
-    document.addEventListener('click', function(e) {
-        if (!document.body.classList.contains('lg-sidebar-open')) return;
-        var sb  = document.querySelector('[data-testid="stSidebar"]');
-        var btn = document.getElementById('lg-menu-btn');
-        if (sb && !sb.contains(e.target) && (!btn || !btn.contains(e.target))) {
-            document.body.classList.remove('lg-sidebar-open');
-        }
-    }, false);
-
-    /* Fechar ao clicar em link/botão de navegação dentro da sidebar */
-    document.addEventListener('click', function(e) {
-        if (!document.body.classList.contains('lg-sidebar-open')) return;
-        var sb = document.querySelector('[data-testid="stSidebar"]');
-        if (sb && sb.contains(e.target) && e.target.closest('button')) {
-            setTimeout(function() { document.body.classList.remove('lg-sidebar-open'); }, 150);
-        }
-    }, false);
-}
-
-/* Associa clique ao botão cada vez que o DOM re-renderiza */
-(function bindBtn() {
-    var btn = document.getElementById('lg-menu-btn');
-    if (btn) {
-        btn.onclick = null;
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            window.lgMenuToggle();
-        });
-    } else {
-        setTimeout(bindBtn, 80);
-    }
-})();
-</script>
-""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Container principal — gera .st-key-main_layout no DOM para CSS targeting
@@ -4157,32 +4009,23 @@ elif page == "Configurações":
 st.markdown("""
 <style>
 
-/* ── Sidebar: z-index máximo + transição suave ───────────────────────────── */
-section[data-testid="stSidebar"],
-[data-testid="stSidebar"] {
-    z-index: 1000000 !important;
-    transition: transform 0.5s ease, visibility 0.5s ease !important;
+/* ── Sidebar: fundo sólido para não vazar texto sobre o dashboard ─────────── */
+[data-testid="stSidebar"],
+section[data-testid="stSidebar"] {
+    background-color: #0E1117 !important;
 }
 
-/* ── Botão nativo de menu (hambúrguer) no header mobile ─────────────────── */
-button[kind="headerNoContext"] {
-    z-index: 999999 !important;
-    background-color: rgba(0, 255, 255, 0.1) !important;
-    border-radius: 5px !important;
-}
-
-/* Sidebar expandida pelo Streamlit (aria-expanded="true"): garantir renderização e largura */
-[data-testid="stSidebar"][aria-expanded="true"],
-section[data-testid="stSidebar"][aria-expanded="true"] {
-    display: block !important;
-    min-width: 300px !important;
-    max-width: 300px !important;
-}
-
-/* Conteúdo interno da sidebar: sempre visível quando expandida */
+/* Conteúdo interno da sidebar: sempre visível */
 [data-testid="stSidebarUserContent"] {
     opacity: 1 !important;
     visibility: visible !important;
+}
+
+/* Botão nativo de abrir menu (hambúrguer) — destaque visual leve */
+.st-emotion-cache-18ni7ap {
+    background-color: rgba(0, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    margin: 5px !important;
 }
 
 /* ── Botão nativo de colapso/hamburger — forçar visível e clicável ─────────── */
@@ -4199,34 +4042,9 @@ section[data-testid="stSidebar"][aria-expanded="true"] {
     background-color: rgba(255, 255, 255, 0.1) !important;
     border-radius: 5px !important;
 }
-/* ── DESKTOP (≥769px): header oculto — sidebar controlada pelo botão interno ─ */
-@media (min-width: 769px) {
-    [data-testid="stHeader"] {
-        display: none !important;
-    }
-    /* Botão menu customizado também escondido no desktop */
-    #lg-menu-btn {
-        display: none !important;
-    }
-}
-
-/* ── MOBILE (≤768px): header visível, transparente, não bloqueia toques ──── */
-@media (max-width: 768px) {
-    [data-testid="stHeader"] {
-        z-index: 999999 !important;
-        background: transparent !important;
-        pointer-events: none !important; /* container não captura toque */
-    }
-    /* Botões dentro do header recebem clique normalmente */
-    [data-testid="stHeader"] button,
-    [data-testid="stHeader"] a,
-    [data-testid="stHeader"] [data-testid="collapsedControl"],
-    [data-testid="stHeader"] [data-testid="stSidebarCollapseButton"],
-    [data-testid="stHeader"] [data-testid="stSidebarNavCollapsedControl"] {
-        pointer-events: auto !important;
-        touch-action: manipulation !important;
-        z-index: 9999999 !important;
-    }
+/* Header: transparente, todos os elementos nativos clicáveis */
+[data-testid="stHeader"] {
+    background: transparent !important;
 }
 /* .main sem margin-top que cubra a barra de navegação */
 .main,
@@ -4271,44 +4089,23 @@ section.main,
     }
 }
 
-/* ── MOBILE (<=768px): sidebar como drawer controlado por body.lg-sidebar-open ─ */
+/* ── MOBILE (<=768px) ─────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
 
-    /* App container: coluna única — sidebar não empurra o conteúdo */
-    [data-testid="stAppViewContainer"] {
-        flex-direction: column !important;
+    /* Sidebar: fundo sólido para não vazar texto, posicionada acima do dashboard */
+    [data-testid="stSidebar"] {
+        background-color: #0E1117 !important;
+        z-index: 1000000 !important;
+        width: 80vw !important;
     }
 
-    /* Sidebar FECHADA (especificidade máxima) */
-    body:not(.lg-sidebar-open) [data-testid="stAppViewContainer"] [data-testid="stSidebar"],
-    body:not(.lg-sidebar-open) [data-testid="stSidebar"] {
-        transform: translateX(-110%) !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-    }
-
-    /* Sidebar ABERTA — Streamlit controla a largura */
-    body.lg-sidebar-open [data-testid="stAppViewContainer"] [data-testid="stSidebar"],
-    body.lg-sidebar-open [data-testid="stSidebar"] {
-        transform: translateX(0) !important;
-        visibility: visible !important;
-        display: block !important;
-        pointer-events: auto !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        height: 100dvh !important;
-        z-index: 999999 !important;
-        overflow-y: auto !important;
-    }
-
-    /* Conteúdo principal: largura total, padding-top para o botão de menu */
+    /* Conteúdo principal: largura total */
     [data-testid="stAppViewContainer"] .block-container,
     [data-testid="stAppViewContainer"] [data-testid="stMain"] .block-container,
     .st-key-main_layout .block-container {
         max-width: 100% !important;
         width: 100% !important;
-        padding: 3.5rem 1rem 1rem 1rem !important;
+        padding: 1rem !important;
     }
 
     /* Blocos horizontais viram colunas */
