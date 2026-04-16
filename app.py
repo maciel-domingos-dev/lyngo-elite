@@ -4021,19 +4021,51 @@ section[data-testid="stSidebar"] {
     visibility: visible !important;
 }
 
-/* Cor ciano nos SVGs de abrir/fechar sidebar (seta e hambúrguer nativo) */
-[data-testid="stSidebarNav"] svg,
+/* ── Cor Ciano Neon em todos os botões de menu e setas ─────────────────────── */
 button[kind="header"] svg,
+[data-testid="stSidebarNav"] svg,
+.st-emotion-cache-6qob1r svg,
 [data-testid="stSidebarCollapseButton"] svg,
-[data-testid="collapsedControl"] svg {
+[data-testid="collapsedControl"] svg,
+[data-testid="stSidebarNavCollapsedControl"] svg {
     fill: #00f2ff !important;
     color: #00f2ff !important;
+    width: 30px !important;
+    height: 30px !important;
 }
 
-/* Botão do cabeçalho: destaque visual e clicável */
+/* Botão de abrir/fechar: destaque visual circular */
+button[kind="header"] {
+    background-color: rgba(0, 242, 255, 0.1) !important;
+    border-radius: 50% !important;
+}
+
+/* Botão do cabeçalho (classe emotion): destaque e clicável */
 .st-emotion-cache-18ni7ap {
     background-color: rgba(0, 242, 255, 0.1) !important;
     border-radius: 8px !important;
+}
+
+/* ── collapsedControl e stSidebarCollapseButton: visíveis, neon, tamanho garantido ── */
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapseButton"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    background-color: rgba(0, 242, 255, 0.08) !important;
+    border-radius: 8px !important;
+    padding: 4px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+[data-testid="collapsedControl"]:hover,
+[data-testid="stSidebarCollapseButton"]:hover {
+    background-color: rgba(0, 242, 255, 0.2) !important;
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.4) !important;
 }
 
 /* ── Botão nativo de colapso/hamburger — forçar visível e clicável ─────────── */
