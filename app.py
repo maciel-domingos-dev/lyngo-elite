@@ -4233,58 +4233,40 @@ st.markdown("""
     var expandBtn = document.getElementById('lg-sidebar-expand-btn');
     if (!expandBtn) return;
 
-    /* Clique: dispara o controle nativo do Streamlit */
     expandBtn.addEventListener('click', function() {
-        /* Tenta collapsedControl primeiro (aparece fora da sidebar) */
-        var ctrl = document.querySelector('[data-testid="collapsedControl"] button')
-                || document.querySelector('[data-testid="collapsedControl"]')
-                || document.querySelector('[data-testid="stSidebarNavCollapsedControl"] button')
-                || document.querySelector('[data-testid="stSidebarNavCollapsedControl"]');
-        if (ctrl) {
-            ctrl.click();
+        var selectors = [
+            '[data-testid="collapsedControl"] button',
+            '[data-testid="collapsedControl"]',
+            '[data-testid="stSidebarNavCollapsedControl"] button',
+            '[data-testid="stSidebarNavCollapsedControl"]',
+            '[data-testid="stSidebarCollapseButton"] button',
+            '[data-testid="stSidebarCollapseButton"]'
+        ];
+        for (var i = 0; i < selectors.length; i++) {
+            var el = document.querySelector(selectors[i]);
+            if (el) { el.click(); return; }
+        }
+    });
+
+    function getSidebarWidth() {
+        var sidebar = document.querySelector('[data-testid="stSidebar"]');
+        if (!sidebar) return 0;
+        return sidebar.getBoundingClientRect().width;
+    }
+
+    function syncBtn() {
+        if (window.innerWidth <= 768) {
+            expandBtn.style.display = 'none';
             return;
         }
-        /* Fallback: botão dentro da sidebar (stSidebarCollapseButton) */
-        var colBtn = document.querySelector('[data-testid="stSidebarCollapseButton"] button')
-                  || document.querySelector('[data-testid="stSidebarCollapseButton"]');
-        if (colBtn) colBtn.click();
-    });
-
-    /* Observa aria-expanded na sidebar para mostrar/ocultar o botão */
-    function syncBtn() {
-        var sidebar = document.querySelector('[data-testid="stSidebar"]');
-        if (!sidebar) return;
-        var expanded = sidebar.getAttribute('aria-expanded');
-        /* No desktop: mostra o >> apenas quando sidebar está recolhida */
-        if (window.innerWidth > 768) {
-            expandBtn.style.display = (expanded === 'false') ? 'flex' : 'none';
-        } else {
-            expandBtn.style.display = 'none';
-        }
+        var width = getSidebarWidth();
+        // Sidebar recolhida tem largura < 50px (geralmente 0 ou muito pequena)
+        expandBtn.style.display = (width < 50) ? 'flex' : 'none';
     }
 
-    /* Roda na carga inicial */
+    // Verifica continuamente a largura da sidebar
+    setInterval(syncBtn, 300);
     syncBtn();
-
-    /* Observa mudanças no aria-expanded */
-    var observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(m) {
-            if (m.attributeName === 'aria-expanded') syncBtn();
-        });
-    });
-
-    function attachObserver() {
-        var sidebar = document.querySelector('[data-testid="stSidebar"]');
-        if (sidebar) {
-            observer.observe(sidebar, { attributes: true, attributeFilter: ['aria-expanded'] });
-            syncBtn();
-        } else {
-            setTimeout(attachObserver, 200);
-        }
-    }
-    attachObserver();
-
-    /* Também re-sincroniza no resize */
     window.addEventListener('resize', syncBtn);
 })();
 </script>
