@@ -161,7 +161,7 @@ st.set_page_config(
     page_title="Lyngo Elite",
     page_icon="🔗",
     layout="centered",
-    initial_sidebar_state="auto",
+    initial_sidebar_state="expanded",
 )
 
 # ── CSS Crítico Mobile — injetado imediatamente após set_page_config ──────────
@@ -4157,10 +4157,18 @@ elif page == "Configurações":
 st.markdown("""
 <style>
 
-/* ── Sidebar: transição suave — Streamlit controla largura ───────────────── */
+/* ── Sidebar: z-index máximo + transição suave ───────────────────────────── */
 section[data-testid="stSidebar"],
 [data-testid="stSidebar"] {
+    z-index: 1000000 !important;
     transition: transform 0.5s ease, visibility 0.5s ease !important;
+}
+
+/* ── Botão nativo de menu (hambúrguer) no header mobile ─────────────────── */
+button[kind="headerNoContext"] {
+    z-index: 999999 !important;
+    background-color: rgba(0, 255, 255, 0.1) !important;
+    border-radius: 5px !important;
 }
 
 /* Sidebar expandida pelo Streamlit (aria-expanded="true"): garantir renderização e largura */
