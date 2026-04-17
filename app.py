@@ -4237,59 +4237,75 @@ section.main,
 </style>
 """, unsafe_allow_html=True)
 
-# ── JS: botão flutuante para re-expandir sidebar quando recolhida (desktop) ──
+# ── JS: botão flutuante criado dinamicamente no body (sobrevive a reruns) ──
 st.markdown("""
-<button id="lg-sidebar-expand-btn" title="Expandir menu" aria-label="Expandir menu">
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 5l7 7-7 7" stroke="#00f2ff" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    </svg>
-</button>
 <script>
 (function() {
     if (window._lgExpandBtnInit) return;
     window._lgExpandBtnInit = true;
 
-    var expandBtn = document.getElementById('lg-sidebar-expand-btn');
-    if (!expandBtn) return;
+    function createBtn() {
+        var old = document.getElementById('lg-sidebar-expand-btn');
+        if (old) old.remove();
 
-    expandBtn.addEventListener('click', function() {
-        var selectors = [
-            '[data-testid="collapsedControl"] button',
-            '[data-testid="collapsedControl"]',
-            '[data-testid="stSidebarNavCollapsedControl"] button',
-            '[data-testid="stSidebarNavCollapsedControl"]',
-            '[data-testid="stSidebarCollapseButton"] button',
-            '[data-testid="stSidebarCollapseButton"]'
-        ];
-        for (var i = 0; i < selectors.length; i++) {
-            var el = document.querySelector(selectors[i]);
-            if (el) { el.click(); return; }
-        }
-    });
+        var btn = document.createElement('button');
+        btn.id = 'lg-sidebar-expand-btn';
+        btn.title = 'Expandir menu';
+        btn.innerHTML = '&raquo;';
+        btn.style.cssText = [
+            'position:fixed',
+            'top:12px',
+            'left:12px',
+            'z-index:2147483647',
+            'width:36px',
+            'height:36px',
+            'display:none',
+            'align-items:center',
+            'justify-content:center',
+            'background:rgba(0,242,255,0.08)',
+            'border:1px solid rgba(0,242,255,0.3)',
+            'border-radius:8px',
+            'cursor:pointer',
+            'color:#00f2ff',
+            'font-size:18px',
+            'font-weight:bold',
+            'pointer-events:auto'
+        ].join(';');
 
-    function getSidebarWidth() {
-        var sidebar = document.querySelector('[data-testid="stSidebar"]');
-        if (!sidebar) return 0;
-        return sidebar.getBoundingClientRect().width;
+        btn.addEventListener('click', function() {
+            var selectors = [
+                '[data-testid="collapsedControl"] button',
+                '[data-testid="collapsedControl"]',
+                '[data-testid="stSidebarNavCollapsedControl"] button',
+                '[data-testid="stSidebarNavCollapsedControl"]',
+                '[data-testid="stSidebarCollapseButton"] button',
+                '[data-testid="stSidebarCollapseButton"]'
+            ];
+            for (var i = 0; i < selectors.length; i++) {
+                var el = document.querySelector(selectors[i]);
+                if (el) { el.click(); return; }
+            }
+        });
+
+        document.body.appendChild(btn);
+        return btn;
     }
 
     function syncBtn() {
+        var btn = document.getElementById('lg-sidebar-expand-btn');
+        if (!btn) btn = createBtn();
         if (window.innerWidth <= 768) {
-            expandBtn.style.display = 'none';
+            btn.style.display = 'none';
             return;
         }
-        var width = getSidebarWidth();
-        // Sidebar recolhida tem largura < 50px (geralmente 0 ou muito pequena)
-        expandBtn.style.display = (width < 50) ? 'flex' : 'none';
+        var sidebar = document.querySelector('[data-testid="stSidebar"]');
+        if (!sidebar) return;
+        var width = sidebar.getBoundingClientRect().width;
+        btn.style.display = (width < 50) ? 'flex' : 'none';
     }
 
-    // Move o botão para filho direto do body, saindo de qualquer
-    // contexto de empilhamento criado pelo Streamlit
-    document.body.appendChild(expandBtn);
-
-    // Verifica continuamente a largura da sidebar
-    setInterval(syncBtn, 300);
+    // Recria o botão a cada rerun do Streamlit
+    setInterval(syncBtn, 500);
     syncBtn();
     window.addEventListener('resize', syncBtn);
 })();
