@@ -4201,113 +4201,40 @@ section.main,
     isolation: auto !important;
 }
 
-/* ── Botão flutuante de expandir sidebar (desktop only) ─────────────────── */
-#lg-sidebar-expand-btn {
-    display: none;
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index: 2147483647;
-    pointer-events: auto !important;
-    width: 36px;
-    height: 36px;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(0, 242, 255, 0.08);
-    border: 1px solid rgba(0, 242, 255, 0.3);
-    border-radius: 8px;
-    cursor: pointer;
-    padding: 0;
-    transition: background-color 0.2s, box-shadow 0.2s;
-}
-#lg-sidebar-expand-btn:hover {
-    background-color: rgba(0, 242, 255, 0.2);
-    box-shadow: 0 0 10px rgba(0, 242, 255, 0.4);
-}
-#lg-sidebar-expand-btn svg {
-    fill: #00f2ff;
-    width: 20px;
-    height: 20px;
-    pointer-events: none;
-}
-@media (max-width: 768px) {
-    #lg-sidebar-expand-btn { display: none !important; }
-}
+
 
 </style>
 """, unsafe_allow_html=True)
 
-# ── JS: botão flutuante criado dinamicamente no body (sobrevive a reruns) ──
+# ── CSS: torna o collapsedControl nativo sempre visível e estilizado ──
 st.markdown("""
-<script>
-(function() {
-    if (window._lgExpandBtnInit) return;
-    window._lgExpandBtnInit = true;
-
-    function createBtn() {
-        var old = document.getElementById('lg-sidebar-expand-btn');
-        if (old) old.remove();
-
-        var btn = document.createElement('button');
-        btn.id = 'lg-sidebar-expand-btn';
-        btn.title = 'Expandir menu';
-        btn.innerHTML = '&raquo;';
-        btn.style.cssText = [
-            'position:fixed',
-            'top:12px',
-            'left:12px',
-            'z-index:2147483647',
-            'width:36px',
-            'height:36px',
-            'display:none',
-            'align-items:center',
-            'justify-content:center',
-            'background:rgba(0,242,255,0.08)',
-            'border:1px solid rgba(0,242,255,0.3)',
-            'border-radius:8px',
-            'cursor:pointer',
-            'color:#00f2ff',
-            'font-size:18px',
-            'font-weight:bold',
-            'pointer-events:auto'
-        ].join(';');
-
-        btn.addEventListener('click', function() {
-            var selectors = [
-                '[data-testid="collapsedControl"] button',
-                '[data-testid="collapsedControl"]',
-                '[data-testid="stSidebarNavCollapsedControl"] button',
-                '[data-testid="stSidebarNavCollapsedControl"]',
-                '[data-testid="stSidebarCollapseButton"] button',
-                '[data-testid="stSidebarCollapseButton"]'
-            ];
-            for (var i = 0; i < selectors.length; i++) {
-                var el = document.querySelector(selectors[i]);
-                if (el) { el.click(); return; }
-            }
-        });
-
-        document.body.appendChild(btn);
-        return btn;
-    }
-
-    function syncBtn() {
-        var btn = document.getElementById('lg-sidebar-expand-btn');
-        if (!btn) btn = createBtn();
-        if (window.innerWidth <= 768) {
-            btn.style.display = 'none';
-            return;
-        }
-        var sidebar = document.querySelector('[data-testid="stSidebar"]');
-        if (!sidebar) return;
-        var width = sidebar.getBoundingClientRect().width;
-        btn.style.display = (width < 50) ? 'flex' : 'none';
-    }
-
-    // Recria o botão a cada rerun do Streamlit
-    setInterval(syncBtn, 500);
-    syncBtn();
-    window.addEventListener('resize', syncBtn);
-})();
-</script>
+<style>
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 2147483647 !important;
+    position: fixed !important;
+    top: 12px !important;
+    left: 12px !important;
+    width: 36px !important;
+    height: 36px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(0,242,255,0.08) !important;
+    border: 1px solid rgba(0,242,255,0.3) !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+}
+[data-testid="collapsedControl"]:hover {
+    background: rgba(0,242,255,0.2) !important;
+    box-shadow: 0 0 10px rgba(0,242,255,0.4) !important;
+}
+[data-testid="collapsedControl"] svg {
+    fill: #00f2ff !important;
+    width: 20px !important;
+    height: 20px !important;
+}
+</style>
 """, unsafe_allow_html=True)
