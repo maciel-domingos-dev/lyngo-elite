@@ -2702,7 +2702,6 @@ if not st.session_state.get("sidebar_open", True):
     if st.button("☰ MENU", key="btn_abrir_menu"):
         st.session_state["sidebar_open"] = True
         st.rerun()
-    st.stop()
 
 with st.sidebar:
     # Logo do topo
