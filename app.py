@@ -164,6 +164,9 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+if "sidebar_open" not in st.session_state:
+    st.session_state["sidebar_open"] = True
+
 # ── CSS Crítico Mobile — injetado imediatamente após set_page_config ──────────
 # Garante que as regras de responsividade sejam as primeiras a serem aplicadas,
 # evitando flash de layout desktop em telas mobile.
@@ -2663,7 +2666,7 @@ _LOGO_PATHS = [
 ]
 _LOGO_FILE = next((p for p in _LOGO_PATHS if os.path.exists(p)), None)
 
-if not st.session_state.sidebar_open:
+if not st.session_state.get("sidebar_open", True):
     st.markdown("""
     <style>
     [data-testid="stSidebar"] {
@@ -2734,6 +2737,7 @@ with st.sidebar:
     for page_name, icon in PAGES.items():
         if st.button(f"{icon}  {page_name}", key=f"nav_{page_name}", use_container_width=True):
             st.session_state.page = page_name
+            st.session_state["sidebar_open"] = False
             st.session_state.pop("editing_produto_id", None)
             st.session_state.pop("confirm_delete_prod_id", None)
             st.rerun()
