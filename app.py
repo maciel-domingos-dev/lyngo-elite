@@ -2755,7 +2755,6 @@ with st.sidebar:
             st.session_state.page = page_name
             st.session_state.pop("editing_produto_id", None)
             st.session_state.pop("confirm_delete_prod_id", None)
-            import streamlit.components.v1 as components
             is_mobile = st.session_state.get("_is_mobile", False)
             if is_mobile:
                 st.session_state["sidebar_open"] = False
