@@ -156,12 +156,17 @@ def _init_session_from_cfg() -> None:
         st.session_state.base_url       = cfg.get("base_url", "http://localhost:8501")
         st.session_state.cfg_loaded = True
 
+# ── Estado do sidebar ─────────────────────────────────────────────────────────
+if "sidebar_open" not in st.session_state:
+    st.session_state.sidebar_open = True
+
 # ── Configuração da página ────────────────────────────────────────────────────
+_sidebar_state = "expanded" if st.session_state.sidebar_open else "collapsed"
 st.set_page_config(
     page_title="Lyngo Elite",
     page_icon="🔗",
     layout="centered",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state=_sidebar_state,
 )
 
 # ── CSS Crítico Mobile — injetado imediatamente após set_page_config ──────────
@@ -2000,29 +2005,8 @@ footer     { visibility: hidden; }
     [data-testid="stSidebar"][aria-expanded="false"] {
         transform: translateX(0) !important;
     }
-    /* Botão de colapso sempre visível no desktop */
-    [data-testid="stSidebarCollapseButton"],
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarNavCollapsedControl"] {
-        visibility: visible !important;
-        display: flex !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        z-index: 999 !important;
-    }
 }
-/* Mobile: sidebar gerenciada nativamente pelo Streamlit */
-/* Ícones: seta (desktop) e X (mobile) — cor ciano visível no tema escuro */
-[data-testid="stSidebarCollapseButton"] svg,
-[data-testid="collapsedControl"] svg {
-    fill: #00f2ff !important;
-    transition: fill 0.2s !important;
-}
-[data-testid="stSidebarCollapseButton"]:hover svg,
-[data-testid="collapsedControl"]:hover svg {
-    fill: #00f2ff !important;
-    filter: drop-shadow(0 0 6px rgba(0,242,255,0.7)) !important;
-}
+/* Botões nativos de colapso ocultos — controle feito via Python buttons */
 
 /* ══════════════════════════════════════════════════════
    LABELS — bloco final, vence qualquer regra anterior
@@ -2712,6 +2696,13 @@ with st.sidebar:
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<hr class="sidebar-divider" style="margin:0.3rem 0 0.6rem 0;">', unsafe_allow_html=True)
 
+    # Botão fechar sidebar
+    st.markdown('<div class="lg-close-sidebar-wrap">', unsafe_allow_html=True)
+    if st.button("◀◀ Fechar", key="btn_close_sidebar", help="Recolher menu", use_container_width=False):
+        st.session_state.sidebar_open = False
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
     PAGES = {
         "Dashboard":          "📊",
         "Gestão de Produtos": "📦",
@@ -2783,6 +2774,15 @@ with st.sidebar:
         '<p style="font-size:0.7rem;color:#2a3555;text-align:center;letter-spacing:1px;margin-top:0.4rem;">v1.0.0 · Lyngo Elite © 2025</p>',
         unsafe_allow_html=True,
     )
+
+
+# Botão MENU fixo — aparece apenas quando sidebar está fechada
+if not st.session_state.sidebar_open:
+    st.markdown('<div class="lg-menu-btn-wrapper">', unsafe_allow_html=True)
+    if st.button("☰ MENU", key="btn_open_sidebar"):
+        st.session_state.sidebar_open = True
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 page = st.session_state.page
 
@@ -4046,31 +4046,6 @@ button[kind="header"] {
     border-radius: 8px !important;
 }
 
-/* ── Desktop only: setas de abrir/fechar sidebar visíveis e funcionando ─────── */
-@media (min-width: 769px) {
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapseButton"],
-    [data-testid="stSidebarNavCollapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        z-index: 9999999 !important;
-        pointer-events: auto !important;
-        touch-action: manipulation !important;
-        background-color: rgba(0, 242, 255, 0.08) !important;
-        border-radius: 8px !important;
-        padding: 4px !important;
-        min-width: 36px !important;
-        min-height: 36px !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    [data-testid="collapsedControl"]:hover,
-    [data-testid="stSidebarCollapseButton"]:hover {
-        background-color: rgba(0, 242, 255, 0.2) !important;
-        box-shadow: 0 0 10px rgba(0, 242, 255, 0.4) !important;
-    }
-}
 /* Header: transparente, todos os elementos nativos clicáveis */
 [data-testid="stHeader"] {
     background: transparent !important;
@@ -4206,35 +4181,64 @@ section.main,
 </style>
 """, unsafe_allow_html=True)
 
-# ── CSS: torna o collapsedControl nativo sempre visível e estilizado ──
+# ── CSS: botões MENU/Fechar e ocultação dos controles nativos do Streamlit ──
 st.markdown("""
 <style>
-[data-testid="collapsedControl"] {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    z-index: 2147483647 !important;
-    position: fixed !important;
-    top: 12px !important;
-    left: 12px !important;
-    width: 36px !important;
-    height: 36px !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: rgba(0,242,255,0.08) !important;
-    border: 1px solid rgba(0,242,255,0.3) !important;
-    border-radius: 8px !important;
+/* Esconde os botões nativos de colapso/expansão — substituídos pelos Python buttons */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"],
+[data-testid="stSidebarNavCollapsedControl"] {
+    display: none !important;
+}
+
+/* Wrapper do botão MENU fixo no topo esquerdo */
+.lg-menu-btn-wrapper {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 2147483647;
+}
+.lg-menu-btn-wrapper button {
+    background: rgba(0, 0, 0, 0.85) !important;
+    color: #00f2ff !important;
+    border: 1px solid rgba(0, 242, 255, 0.5) !important;
+    border-radius: 6px !important;
+    font-family: 'Orbitron', monospace !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px !important;
+    padding: 5px 12px !important;
     cursor: pointer !important;
+    white-space: nowrap !important;
+    box-shadow: 0 0 8px rgba(0, 242, 255, 0.2) !important;
+    transition: background 0.2s, box-shadow 0.2s !important;
 }
-[data-testid="collapsedControl"]:hover {
-    background: rgba(0,242,255,0.2) !important;
-    box-shadow: 0 0 10px rgba(0,242,255,0.4) !important;
+.lg-menu-btn-wrapper button:hover {
+    background: rgba(0, 242, 255, 0.12) !important;
+    box-shadow: 0 0 14px rgba(0, 242, 255, 0.45) !important;
 }
-[data-testid="collapsedControl"] svg {
-    fill: #00f2ff !important;
-    width: 20px !important;
-    height: 20px !important;
+
+/* Botão fechar dentro da sidebar */
+.lg-close-sidebar-wrap {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 0.2rem 0.4rem 0;
+}
+.lg-close-sidebar-wrap button {
+    background: transparent !important;
+    color: #00f2ff !important;
+    border: 1px solid rgba(0, 242, 255, 0.3) !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1px !important;
+    padding: 3px 10px !important;
+    cursor: pointer !important;
+    transition: background 0.2s, box-shadow 0.2s !important;
+}
+.lg-close-sidebar-wrap button:hover {
+    background: rgba(0, 242, 255, 0.1) !important;
+    box-shadow: 0 0 8px rgba(0, 242, 255, 0.35) !important;
 }
 </style>
 """, unsafe_allow_html=True)
