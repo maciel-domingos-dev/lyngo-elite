@@ -825,8 +825,7 @@ if not st.session_state.get("logged_in"):
         _login_page()
         st.stop()
 
-    if "sidebar_open" not in st.session_state:
-        st.session_state.sidebar_open = True
+    st.session_state.setdefault("sidebar_open", True)
 
 def _uid() -> int:
     """Retorna o ID do usuário autenticado na sessão atual."""
@@ -2666,9 +2665,22 @@ _LOGO_FILE = next((p for p in _LOGO_PATHS if os.path.exists(p)), None)
 if not st.session_state.sidebar_open:
     st.markdown("""
     <style>
-    [data-testid="stSidebar"] { display: none !important; }
-    [data-testid="stSidebarCollapseButton"] { display: none !important; }
-    [data-testid="collapsedControl"] { display: none !important; }
+    [data-testid="stSidebar"] {
+        display: none !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        visibility: hidden !important;
+    }
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="stSidebarNavCollapsedControl"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    .main .block-container {
+        max-width: 100% !important;
+        padding-left: 1rem !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -2781,9 +2793,22 @@ with st.sidebar:
 
 
 if not st.session_state.sidebar_open:
+    st.markdown("""
+    <style>
+    div[data-testid="stElementContainer"]:has(button[key="btn_abrir_menu"]),
+    .btn-menu-fixed {
+        position: fixed !important;
+        top: 0.8rem !important;
+        left: 0.8rem !important;
+        z-index: 9999999 !important;
+    }
+    </style>
+    <div class="btn-menu-fixed">
+    """, unsafe_allow_html=True)
     if st.button("☰ MENU", key="btn_abrir_menu"):
         st.session_state.sidebar_open = True
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 page = st.session_state.page
 
