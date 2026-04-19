@@ -166,28 +166,18 @@ st.set_page_config(
 
 if "sidebar_open" not in st.session_state:
     st.session_state["sidebar_open"] = True
-if "is_mobile" not in st.session_state:
-    st.session_state["is_mobile"] = False
 
 st.markdown("""
 <script>
-function checkMobile() {
-    var isMobile = window.innerWidth <= 768;
-    if (isMobile !== window.lastMobile) {
-        window.lastMobile = isMobile;
-        fetch('/_stcore/health').then(function() {
-            var inputs = window.parent.document.querySelectorAll('input');
-            inputs.forEach(function(inp) {
-                if (inp.id === 'is_mobile_input') {
-                    inp.value = isMobile ? 'true' : 'false';
-                    inp.dispatchEvent(new Event('change'));
-                }
-            });
-        });
+(function(){
+    var w = window.innerWidth || screen.width;
+    var isMobile = w <= 768;
+    var key = '_is_mobile';
+    if(window.parent && window.parent.streamlitApp) {
+        window.parent.streamlitApp.setComponentValue(isMobile);
     }
-}
-checkMobile();
-window.addEventListener('resize', checkMobile);
+    document.cookie = key + '=' + isMobile + ';path=/';
+})();
 </script>
 """, unsafe_allow_html=True)
 
@@ -2693,21 +2683,26 @@ _LOGO_FILE = next((p for p in _LOGO_PATHS if os.path.exists(p)), None)
 if not st.session_state.get("sidebar_open", True):
     st.markdown("""
     <style>
-    @media (max-width: 768px) {
-        [data-testid="stSidebar"],
-        section[data-testid="stSidebar"] {
-            display: none !important;
-            width: 0 !important;
-            visibility: hidden !important;
-        }
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"],
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"] {
+        display: none !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        visibility: hidden !important;
+    }
+    .main .block-container {
+        max-width: 100% !important;
+        padding-left: 1rem !important;
+        margin-left: 0 !important;
     }
     </style>
     """, unsafe_allow_html=True)
-    col_m, _ = st.columns([1, 6])
-    with col_m:
-        if st.button("☰ MENU", key="btn_abrir_menu", use_container_width=True):
-            st.session_state["sidebar_open"] = True
-            st.rerun()
+    if st.button("☰ MENU", key="btn_abrir_menu"):
+        st.session_state["sidebar_open"] = True
+        st.rerun()
+    st.stop()
 
 with st.sidebar:
     # Logo do topo
@@ -2758,15 +2753,12 @@ with st.sidebar:
     for page_name, icon in PAGES.items():
         if st.button(f"{icon}  {page_name}", key=f"nav_{page_name}", use_container_width=True):
             st.session_state.page = page_name
-            st.markdown("""
-            <script>
-            if (window.innerWidth <= 768) {
-                window.parent.postMessage({type: 'mobile_nav'}, '*');
-            }
-            </script>
-            """, unsafe_allow_html=True)
             st.session_state.pop("editing_produto_id", None)
             st.session_state.pop("confirm_delete_prod_id", None)
+            import streamlit.components.v1 as components
+            is_mobile = st.session_state.get("_is_mobile", False)
+            if is_mobile:
+                st.session_state["sidebar_open"] = False
             st.rerun()
 
     # Marca o botão ativo via JS (sem div wrappers que quebram o sidebar)
