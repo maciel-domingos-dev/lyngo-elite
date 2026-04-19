@@ -167,6 +167,11 @@ st.set_page_config(
 if "sidebar_open" not in st.session_state:
     st.session_state["sidebar_open"] = True
 
+if st.query_params.get("menu") == "open":
+    st.session_state["sidebar_open"] = True
+elif st.query_params.get("menu") == "closed":
+    st.session_state["sidebar_open"] = False
+
 # ── CSS Crítico Mobile — injetado imediatamente após set_page_config ──────────
 # Garante que as regras de responsividade sejam as primeiras a serem aplicadas,
 # evitando flash de layout desktop em telas mobile.
@@ -2674,6 +2679,7 @@ if not st.session_state.get("sidebar_open", True):
         width: 0 !important;
         min-width: 0 !important;
         visibility: hidden !important;
+        pointer-events: none !important;
     }
     [data-testid="collapsedControl"],
     [data-testid="stSidebarCollapseButton"],
@@ -2738,6 +2744,7 @@ with st.sidebar:
         if st.button(f"{icon}  {page_name}", key=f"nav_{page_name}", use_container_width=True):
             st.session_state.page = page_name
             st.session_state["sidebar_open"] = False
+            st.query_params["menu"] = "closed"
             st.session_state.pop("editing_produto_id", None)
             st.session_state.pop("confirm_delete_prod_id", None)
             st.rerun()
@@ -2802,6 +2809,7 @@ if not st.session_state.get("sidebar_open", True):
     with col_menu:
         if st.button("☰ MENU", key="btn_abrir_menu", use_container_width=True):
             st.session_state["sidebar_open"] = True
+            st.query_params["menu"] = "open"
             st.rerun()
 
 page = st.session_state.page
