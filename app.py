@@ -156,17 +156,12 @@ def _init_session_from_cfg() -> None:
         st.session_state.base_url       = cfg.get("base_url", "http://localhost:8501")
         st.session_state.cfg_loaded = True
 
-# ── Estado do sidebar ─────────────────────────────────────────────────────────
-if "sidebar_open" not in st.session_state:
-    st.session_state.sidebar_open = True
-
 # ── Configuração da página ────────────────────────────────────────────────────
-_sidebar_state = "expanded" if st.session_state.sidebar_open else "collapsed"
 st.set_page_config(
     page_title="Lyngo Elite",
     page_icon="🔗",
     layout="centered",
-    initial_sidebar_state=_sidebar_state,
+    initial_sidebar_state="expanded",
 )
 
 # ── CSS Crítico Mobile — injetado imediatamente após set_page_config ──────────
@@ -829,6 +824,9 @@ if not st.session_state.get("logged_in"):
     if not st.session_state.get("logged_in"):
         _login_page()
         st.stop()
+
+    if "sidebar_open" not in st.session_state:
+        st.session_state.sidebar_open = True
 
 def _uid() -> int:
     """Retorna o ID do usuário autenticado na sessão atual."""
@@ -2665,6 +2663,15 @@ _LOGO_PATHS = [
 ]
 _LOGO_FILE = next((p for p in _LOGO_PATHS if os.path.exists(p)), None)
 
+if not st.session_state.sidebar_open:
+    st.markdown("""
+    <style>
+    [data-testid="stSidebar"] { display: none !important; }
+    [data-testid="stSidebarCollapseButton"] { display: none !important; }
+    [data-testid="collapsedControl"] { display: none !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
 with st.sidebar:
     # Logo do topo
     st.markdown('<div style="padding:0.6rem 0.5rem 0.2rem 0.5rem;">', unsafe_allow_html=True)
@@ -2696,12 +2703,9 @@ with st.sidebar:
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<hr class="sidebar-divider" style="margin:0.3rem 0 0.6rem 0;">', unsafe_allow_html=True)
 
-    # Botão fechar sidebar
-    st.markdown('<div class="lg-close-sidebar-wrap">', unsafe_allow_html=True)
-    if st.button("◀◀ Fechar", key="btn_close_sidebar", help="Recolher menu", use_container_width=False):
+    if st.button("✕ Fechar Menu", key="btn_fechar_menu", use_container_width=True):
         st.session_state.sidebar_open = False
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
     PAGES = {
         "Dashboard":          "📊",
@@ -2776,13 +2780,10 @@ with st.sidebar:
     )
 
 
-# Botão MENU fixo — aparece apenas quando sidebar está fechada
 if not st.session_state.sidebar_open:
-    st.markdown('<div class="lg-menu-btn-wrapper">', unsafe_allow_html=True)
-    if st.button("☰ MENU", key="btn_open_sidebar"):
+    if st.button("☰ MENU", key="btn_abrir_menu"):
         st.session_state.sidebar_open = True
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 page = st.session_state.page
 
