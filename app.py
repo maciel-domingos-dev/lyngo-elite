@@ -825,7 +825,8 @@ if not st.session_state.get("logged_in"):
         _login_page()
         st.stop()
 
-    st.session_state.setdefault("sidebar_open", True)
+    if "sidebar_open" not in st.session_state:
+        st.session_state["sidebar_open"] = True
 
 def _uid() -> int:
     """Retorna o ID do usuário autenticado na sessão atual."""
@@ -2716,7 +2717,7 @@ with st.sidebar:
     st.markdown('<hr class="sidebar-divider" style="margin:0.3rem 0 0.6rem 0;">', unsafe_allow_html=True)
 
     if st.button("✕ Fechar Menu", key="btn_fechar_menu", use_container_width=True):
-        st.session_state.sidebar_open = False
+        st.session_state["sidebar_open"] = False
         st.rerun()
 
     PAGES = {
@@ -2792,22 +2793,43 @@ with st.sidebar:
     )
 
 
-if not st.session_state.sidebar_open:
+if not st.session_state.get("sidebar_open", True):
     st.markdown("""
     <style>
-    div[data-testid="stElementContainer"]:has(button[key="btn_abrir_menu"]),
     .btn-menu-fixed {
         position: fixed !important;
         top: 0.8rem !important;
         left: 0.8rem !important;
         z-index: 9999999 !important;
+        width: auto !important;
+    }
+    .btn-menu-fixed > div {
+        position: fixed !important;
+        top: 0.8rem !important;
+        left: 0.8rem !important;
+        z-index: 9999999 !important;
+    }
+    .btn-menu-fixed button {
+        background: rgba(0,245,255,0.1) !important;
+        border: 2px solid #00f5ff !important;
+        color: #00f5ff !important;
+        font-weight: 700 !important;
+        font-size: 0.85rem !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 8px !important;
+        box-shadow: 0 0 12px rgba(0,245,255,0.4) !important;
+        min-width: 80px !important;
     }
     </style>
     <div class="btn-menu-fixed">
     """, unsafe_allow_html=True)
-    if st.button("☰ MENU", key="btn_abrir_menu"):
-        st.session_state.sidebar_open = True
-        st.rerun()
+
+    col_menu, _ = st.columns([1, 8])
+    with col_menu:
+        if st.button("☰ MENU", key="btn_abrir_menu", use_container_width=True):
+            st.session_state["sidebar_open"] = True
+            st.rerun()
+
     st.markdown('</div>', unsafe_allow_html=True)
 
 page = st.session_state.page
