@@ -166,11 +166,30 @@ st.set_page_config(
 
 if "sidebar_open" not in st.session_state:
     st.session_state["sidebar_open"] = True
+if "is_mobile" not in st.session_state:
+    st.session_state["is_mobile"] = False
 
-if st.query_params.get("menu") == "open":
-    st.session_state["sidebar_open"] = True
-elif st.query_params.get("menu") == "closed":
-    st.session_state["sidebar_open"] = False
+st.markdown("""
+<script>
+function checkMobile() {
+    var isMobile = window.innerWidth <= 768;
+    if (isMobile !== window.lastMobile) {
+        window.lastMobile = isMobile;
+        fetch('/_stcore/health').then(function() {
+            var inputs = window.parent.document.querySelectorAll('input');
+            inputs.forEach(function(inp) {
+                if (inp.id === 'is_mobile_input') {
+                    inp.value = isMobile ? 'true' : 'false';
+                    inp.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+    }
+}
+checkMobile();
+window.addEventListener('resize', checkMobile);
+</script>
+""", unsafe_allow_html=True)
 
 # ── CSS Crítico Mobile — injetado imediatamente após set_page_config ──────────
 # Garante que as regras de responsividade sejam as primeiras a serem aplicadas,
@@ -2674,25 +2693,21 @@ _LOGO_FILE = next((p for p in _LOGO_PATHS if os.path.exists(p)), None)
 if not st.session_state.get("sidebar_open", True):
     st.markdown("""
     <style>
-    [data-testid="stSidebar"] {
-        display: none !important;
-        width: 0 !important;
-        min-width: 0 !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-    }
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapseButton"],
-    [data-testid="stSidebarNavCollapsedControl"] {
-        display: none !important;
-        visibility: hidden !important;
-    }
-    .main .block-container {
-        max-width: 100% !important;
-        padding-left: 1rem !important;
+    @media (max-width: 768px) {
+        [data-testid="stSidebar"],
+        section[data-testid="stSidebar"] {
+            display: none !important;
+            width: 0 !important;
+            visibility: hidden !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
+    col_m, _ = st.columns([1, 6])
+    with col_m:
+        if st.button("☰ MENU", key="btn_abrir_menu", use_container_width=True):
+            st.session_state["sidebar_open"] = True
+            st.rerun()
 
 with st.sidebar:
     # Logo do topo
@@ -2743,8 +2758,13 @@ with st.sidebar:
     for page_name, icon in PAGES.items():
         if st.button(f"{icon}  {page_name}", key=f"nav_{page_name}", use_container_width=True):
             st.session_state.page = page_name
-            st.session_state["sidebar_open"] = False
-            st.query_params["menu"] = "closed"
+            st.markdown("""
+            <script>
+            if (window.innerWidth <= 768) {
+                window.parent.postMessage({type: 'mobile_nav'}, '*');
+            }
+            </script>
+            """, unsafe_allow_html=True)
             st.session_state.pop("editing_produto_id", None)
             st.session_state.pop("confirm_delete_prod_id", None)
             st.rerun()
@@ -2803,14 +2823,6 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-
-if not st.session_state.get("sidebar_open", True):
-    col_menu, _ = st.columns([1, 8])
-    with col_menu:
-        if st.button("☰ MENU", key="btn_abrir_menu", use_container_width=True):
-            st.session_state["sidebar_open"] = True
-            st.query_params["menu"] = "open"
-            st.rerun()
 
 page = st.session_state.page
 
