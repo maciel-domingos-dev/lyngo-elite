@@ -2680,6 +2680,45 @@ _LOGO_PATHS = [
 ]
 _LOGO_FILE = next((p for p in _LOGO_PATHS if os.path.exists(p)), None)
 
+_sidebar_open = st.session_state.get("sidebar_open", True)
+
+if _sidebar_open:
+    st.markdown("""
+    <style>
+    [data-testid="stSidebar"] {
+        display: flex !important;
+        visibility: visible !important;
+        width: 21rem !important;
+        min-width: 21rem !important;
+    }
+    .main .block-container {
+        padding-left: 1rem !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <style>
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"],
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"] {
+        display: none !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        visibility: hidden !important;
+    }
+    .main .block-container {
+        max-width: 100% !important;
+        padding-left: 1rem !important;
+        margin-left: 0 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    if st.button("☰ MENU", key="btn_abrir_menu"):
+        st.session_state["sidebar_open"] = True
+        st.rerun()
+
 with st.sidebar:
     # Logo do topo
     st.markdown('<div style="padding:0.6rem 0.5rem 0.2rem 0.5rem;">', unsafe_allow_html=True)
