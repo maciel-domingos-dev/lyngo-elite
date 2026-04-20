@@ -2680,7 +2680,56 @@ _LOGO_PATHS = [
 ]
 _LOGO_FILE = next((p for p in _LOGO_PATHS if os.path.exists(p)), None)
 
-if not st.session_state.get("sidebar_open", True):
+# Detecta mobile via query param injetado por JS
+if "is_mobile" not in st.session_state:
+    st.session_state["is_mobile"] = False
+
+# Injeta JS que detecta mobile e adiciona ?mobile=1 na URL
+st.markdown("""
+<script>
+(function() {
+    if (window.innerWidth < 768) {
+        var url = new URL(window.location.href);
+        if (!url.searchParams.get('mobile')) {
+            url.searchParams.set('mobile', '1');
+            window.location.replace(url.toString());
+        }
+    }
+})();
+</script>
+""", unsafe_allow_html=True)
+
+# Lê o param mobile da URL
+_qp = st.query_params
+if _qp.get("mobile") == "1":
+    st.session_state["is_mobile"] = True
+
+_sidebar_open = st.session_state.get("sidebar_open", True)
+_is_mobile = st.session_state.get("is_mobile", False)
+
+if _is_mobile and not _sidebar_open:
+    st.markdown("""
+    <style>
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"],
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"] {
+        display: none !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        visibility: hidden !important;
+    }
+    .main .block-container {
+        max-width: 100% !important;
+        padding-left: 1rem !important;
+        margin-left: 0 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    if st.button("☰ MENU", key="btn_abrir_menu"):
+        st.session_state["sidebar_open"] = True
+        st.rerun()
+elif not _is_mobile and not _sidebar_open:
     st.markdown("""
     <style>
     [data-testid="stSidebar"],
@@ -2754,6 +2803,8 @@ with st.sidebar:
             st.session_state.page = page_name
             st.session_state.pop("editing_produto_id", None)
             st.session_state.pop("confirm_delete_prod_id", None)
+            if st.session_state.get("is_mobile", False):
+                st.session_state["sidebar_open"] = False
             st.rerun()
 
     # Marca o botão ativo via JS (sem div wrappers que quebram o sidebar)
