@@ -16,7 +16,10 @@ VIVI_MODEL_ID = "google/gemma-3-4b-it:free"
 
 def _vivi_generate(messages: list, system_prompt: str) -> str:
     """Gera resposta da VIBEL via OpenRouter (formato OpenAI)."""
-    api_key = (os.environ.get("GEMINI_API_KEY") or st.session_state.get("gemini_api_key", "")).strip()
+    import os
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        api_key = st.session_state.get("gemini_api_key", "").strip()
     if not api_key:
         raise ValueError("Configure sua chave API nas Configurações para ativar a VIBEL AI.")
 
