@@ -2754,7 +2754,6 @@ with st.sidebar:
             st.session_state.page = page_name
             st.session_state.pop("editing_produto_id", None)
             st.session_state.pop("confirm_delete_prod_id", None)
-            st.session_state["sidebar_open"] = False
             st.rerun()
 
     # Marca o botão ativo via JS (sem div wrappers que quebram o sidebar)
