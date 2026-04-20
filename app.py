@@ -2754,7 +2754,7 @@ with st.sidebar:
             st.session_state.page = page_name
             st.session_state.pop("editing_produto_id", None)
             st.session_state.pop("confirm_delete_prod_id", None)
-            st.session_state["_close_sidebar_mobile"] = True
+            st.session_state["sidebar_open"] = False
             st.rerun()
 
     # Marca o botão ativo via JS (sem div wrappers que quebram o sidebar)
@@ -2811,28 +2811,6 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-
-if st.session_state.pop("_close_sidebar_mobile", False):
-    st.markdown("""
-    <script>
-    (function() {
-        if (window.innerWidth < 768) {
-            var btn = parent.document.querySelector('[data-testid="collapsedControl"]');
-            if (!btn) btn = parent.document.querySelector('button[kind="header"]');
-            if (!btn) {
-                var btns = parent.document.querySelectorAll('button');
-                btns.forEach(function(b) {
-                    if (b.getAttribute('aria-label') &&
-                        b.getAttribute('aria-label').toLowerCase().includes('sidebar')) {
-                        btn = b;
-                    }
-                });
-            }
-            if (btn) btn.click();
-        }
-    })();
-    </script>
-    """, unsafe_allow_html=True)
 
 page = st.session_state.page
 
