@@ -12,7 +12,7 @@ from database import (
 init_db()
 
 # Modelo OpenRouter da VIBEL
-VIVI_MODEL_ID = "mistralai/mistral-7b-instruct:free"
+VIVI_MODEL_ID = "google/gemma-3-4b-it:free"
 
 def _vivi_generate(messages: list, system_prompt: str) -> str:
     """Gera resposta da VIBEL via OpenRouter (formato OpenAI)."""
