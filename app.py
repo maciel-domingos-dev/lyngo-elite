@@ -2685,14 +2685,20 @@ _sidebar_open = st.session_state.get("sidebar_open", True)
 if _sidebar_open:
     st.markdown("""
     <style>
-    [data-testid="stSidebar"] {
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"] {
         display: flex !important;
         visibility: visible !important;
         width: 21rem !important;
         min-width: 21rem !important;
+        max-width: 21rem !important;
+        transform: none !important;
+        left: 0 !important;
+        position: relative !important;
     }
-    .main .block-container {
-        padding-left: 1rem !important;
+    [data-testid="stSidebarContent"] {
+        width: 21rem !important;
+        min-width: 21rem !important;
     }
     </style>
     """, unsafe_allow_html=True)
