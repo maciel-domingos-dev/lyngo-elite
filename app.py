@@ -161,7 +161,7 @@ st.set_page_config(
     page_title="Lyngo Elite",
     page_icon="🔗",
     layout="centered",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 if "sidebar_open" not in st.session_state:
@@ -2680,78 +2680,6 @@ _LOGO_PATHS = [
 ]
 _LOGO_FILE = next((p for p in _LOGO_PATHS if os.path.exists(p)), None)
 
-# Detecta mobile via query param injetado por JS
-if "is_mobile" not in st.session_state:
-    st.session_state["is_mobile"] = False
-
-# Injeta JS que detecta mobile e adiciona ?mobile=1 na URL
-st.markdown("""
-<script>
-(function() {
-    if (window.innerWidth < 768) {
-        var url = new URL(window.location.href);
-        if (!url.searchParams.get('mobile')) {
-            url.searchParams.set('mobile', '1');
-            window.location.replace(url.toString());
-        }
-    }
-})();
-</script>
-""", unsafe_allow_html=True)
-
-# Lê o param mobile da URL
-_qp = st.query_params
-if _qp.get("mobile") == "1":
-    st.session_state["is_mobile"] = True
-
-_sidebar_open = st.session_state.get("sidebar_open", True)
-_is_mobile = st.session_state.get("is_mobile", False)
-
-if _is_mobile and not _sidebar_open:
-    st.markdown("""
-    <style>
-    [data-testid="stSidebar"],
-    section[data-testid="stSidebar"],
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapseButton"] {
-        display: none !important;
-        width: 0 !important;
-        min-width: 0 !important;
-        visibility: hidden !important;
-    }
-    .main .block-container {
-        max-width: 100% !important;
-        padding-left: 1rem !important;
-        margin-left: 0 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    if st.button("☰ MENU", key="btn_abrir_menu"):
-        st.session_state["sidebar_open"] = True
-        st.rerun()
-elif not _is_mobile and not _sidebar_open:
-    st.markdown("""
-    <style>
-    [data-testid="stSidebar"],
-    section[data-testid="stSidebar"],
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapseButton"] {
-        display: none !important;
-        width: 0 !important;
-        min-width: 0 !important;
-        visibility: hidden !important;
-    }
-    .main .block-container {
-        max-width: 100% !important;
-        padding-left: 1rem !important;
-        margin-left: 0 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    if st.button("☰ MENU", key="btn_abrir_menu"):
-        st.session_state["sidebar_open"] = True
-        st.rerun()
-
 with st.sidebar:
     # Logo do topo
     st.markdown('<div style="padding:0.6rem 0.5rem 0.2rem 0.5rem;">', unsafe_allow_html=True)
@@ -2783,10 +2711,6 @@ with st.sidebar:
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<hr class="sidebar-divider" style="margin:0.3rem 0 0.6rem 0;">', unsafe_allow_html=True)
 
-    if st.button("✕ Fechar Menu", key="btn_fechar_menu", use_container_width=True):
-        st.session_state["sidebar_open"] = False
-        st.rerun()
-
     PAGES = {
         "Dashboard":          "📊",
         "Gestão de Produtos": "📦",
@@ -2803,8 +2727,6 @@ with st.sidebar:
             st.session_state.page = page_name
             st.session_state.pop("editing_produto_id", None)
             st.session_state.pop("confirm_delete_prod_id", None)
-            if st.session_state.get("is_mobile", False):
-                st.session_state["sidebar_open"] = False
             st.rerun()
 
     # Marca o botão ativo via JS (sem div wrappers que quebram o sidebar)
