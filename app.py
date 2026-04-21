@@ -12,12 +12,11 @@ from database import (
 init_db()
 
 # Modelo OpenRouter da VIBEL
-VIVI_MODEL_ID = "google/gemma-3-4b-it:free"
+VIVI_MODEL_ID = "openrouter/free"
 
 def _vivi_generate(messages: list, system_prompt: str) -> str:
     """Gera resposta da VIBEL via OpenRouter (formato OpenAI)."""
-    import os
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    api_key = (st.secrets.get("GEMINI_API_KEY") or "").strip()
     if not api_key:
         api_key = st.session_state.get("gemini_api_key", "").strip()
     if not api_key:
@@ -95,7 +94,7 @@ def _copy_component(url: str, key: str) -> None:
     )
 
 # ── Persona da VIBEL AI ───────────────────────────────────────────────────────
-VIVI_SYSTEM_PROMPT = """Você é a VIBEL AI, Estrategista de Vendas Exclusiva do Lyngo Elite.
+VIVI_SYSTEM_PROMPT = """Você é a VIBEL AI, Estrategista de Vendas Exclusiva do LinkGuard.
 
 MISSÃO: Ajudar Afiliados, donos de E-commerce e Comércios Locais a organizarem seus links \
 e converterem cliques em vendas reais.
@@ -161,65 +160,9 @@ def _init_session_from_cfg() -> None:
 st.set_page_config(
     page_title="Lyngo Elite",
     page_icon="🔗",
-    layout="centered",
-    initial_sidebar_state="collapsed",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
-
-if "sidebar_open" not in st.session_state:
-    st.session_state["sidebar_open"] = True
-
-st.markdown("""
-<script>
-(function(){
-    var w = window.innerWidth || screen.width;
-    var isMobile = w <= 768;
-    var key = '_is_mobile';
-    if(window.parent && window.parent.streamlitApp) {
-        window.parent.streamlitApp.setComponentValue(isMobile);
-    }
-    document.cookie = key + '=' + isMobile + ';path=/';
-})();
-</script>
-""", unsafe_allow_html=True)
-
-# ── CSS Crítico Mobile — injetado imediatamente após set_page_config ──────────
-# Garante que as regras de responsividade sejam as primeiras a serem aplicadas,
-# evitando flash de layout desktop em telas mobile.
-st.markdown("""
-<style>
-/* Força colunas Streamlit a empilharem no mobile (selector atualizado para v1.40+) */
-@media (max-width: 768px) {
-    /* Streamlit >= 1.40 usa data-testid="column"; versões anteriores usam "stColumn" */
-    [data-testid="column"],
-    [data-testid="stColumn"] {
-        width: 100% !important;
-        flex: 1 1 calc(100% - 1rem) !important;
-        min-width: 100% !important;
-    }
-    /* Container principal sem padding lateral excessivo */
-    .block-container,
-    [data-testid="stMain"] .block-container {
-        padding-left: 0.75rem !important;
-        padding-right: 0.75rem !important;
-        max-width: 100% !important;
-    }
-    /* Bloco horizontal vira coluna */
-    [data-testid="stHorizontalBlock"],
-    [data-testid="stColumns"] {
-        flex-direction: column !important;
-        flex-wrap: wrap !important;
-    }
-}
-@media (max-width: 480px) {
-    [data-testid="column"],
-    [data-testid="stColumn"] {
-        width: 100% !important;
-        flex: 1 1 100% !important;
-        min-width: 100% !important;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
 
 # ── Rastreador de cliques via ?r=slug ─────────────────────────────────────────
 # Deve ficar logo após st.set_page_config (primeiro comando Streamlit)
@@ -269,11 +212,9 @@ section.main,.main{background:#030508!important;}
 <div style="min-height:75vh;display:flex;flex-direction:column;
     align-items:center;justify-content:center;text-align:center;
     gap:1.1rem;font-family:'Segoe UI',system-ui,sans-serif;">
-  <div style="font-size:5rem;font-weight:900;line-height:1;letter-spacing:8px;
-      font-family:'Orbitron',monospace;
-      background:linear-gradient(135deg,#00f5ff,#a855f7,#ff2d78);
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-      filter:drop-shadow(0 0 18px rgba(0,245,255,.5)) drop-shadow(0 0 30px rgba(168,85,247,.3));">
+  <div style="font-size:5rem;font-weight:900;line-height:1;color:#00f5ff;
+      letter-spacing:8px;
+      text-shadow:0 0 40px rgba(0,245,255,.6),0 0 80px rgba(0,245,255,.2);">
     404
   </div>
   <div style="font-size:.9rem;font-weight:800;color:#e0e6f0;
@@ -289,14 +230,11 @@ section.main,.main{background:#030508!important;}
     não existe ou foi removido pelo proprietário.
   </div>
   <a href="/" style="margin-top:.4rem;display:inline-block;
-      padding:.5rem 1.6rem;border-radius:6px;
-      background:linear-gradient(#030508,#030508) padding-box,
-                 linear-gradient(135deg,#00f5ff,#a855f7,#ff2d78) border-box;
-      border:2px solid transparent;
+      padding:.5rem 1.6rem;border:2px solid #00f5ff;border-radius:6px;
       color:#00f5ff;text-decoration:none;font-size:.75rem;font-weight:800;
       letter-spacing:2px;text-transform:uppercase;
-      box-shadow:0 0 20px rgba(0,245,255,.3),0 0 40px rgba(168,85,247,.15);
-      text-shadow:0 0 8px rgba(0,245,255,.6);">
+      box-shadow:0 0 16px rgba(0,245,255,.25);
+      text-shadow:0 0 8px rgba(0,245,255,.5);">
     ← Voltar ao início
   </a>
   <div style="font-size:.62rem;color:#1e2a40;letter-spacing:3px;margin-top:.3rem;">
@@ -318,7 +256,6 @@ div[class*="appview"] {
     background-color: #030508 !important;
     height: 100% !important;
     min-height: 100vh !important;
-    overflow-x: hidden !important;
 }
 
 [data-testid="stMain"],
@@ -346,24 +283,24 @@ div[class*="main"] {
 #auth-container,
 .main .block-container,
 [data-testid="stMain"] .block-container {
-    max-width: min(500px, 96vw) !important;
-    width: min(500px, 96vw) !important;
+    max-width: 500px !important;
+    width: 500px !important;
     margin: 0 auto !important;
 }
 
 .main .block-container {
-    max-width: min(500px, 96vw) !important;
-    width: min(500px, 96vw) !important;
+    max-width: 500px !important;
+    width: 500px !important;
     margin: 0 auto !important;
-    padding: 2.6rem clamp(1rem, 5vw, 2.4rem) 2.2rem !important;
-    background: linear-gradient(#090e1b, #060810) padding-box,
-                linear-gradient(135deg, #00f5ff, #a855f7, #ff2d78) border-box !important;
-    border: 2px solid transparent !important;
+    padding: 2.6rem 2.4rem 2.2rem !important;
+    background: linear-gradient(160deg, #090e1b 0%, #060810 100%) !important;
+    border: 2px solid #00f5ff !important;
     border-radius: 18px !important;
     box-shadow:
-        0 0 40px rgba(0,245,255,0.3),
-        0 0 80px rgba(168,85,247,0.2),
-        0 0 120px rgba(255,45,120,0.1),
+        0 0 25px rgba(0,245,255,0.4),
+        0 0 50px rgba(168,85,247,0.25),
+        0 0 90px rgba(0,245,255,0.12),
+        0 0 140px rgba(168,85,247,0.08),
         inset 0 0 30px rgba(0,245,255,0.03) !important;
     position: relative !important;
 }
@@ -377,7 +314,7 @@ div[class*="main"] {
     position: absolute !important;
     top: 0 !important; left: 0 !important; right: 0 !important;
     height: 2px !important;
-    background: linear-gradient(90deg, transparent 0%, #00f5ff 30%, #a855f7 55%, #ff2d78 80%, transparent 100%) !important;
+    background: linear-gradient(90deg, transparent 0%, #00f5ff 40%, #a855f7 60%, transparent 100%) !important;
     animation: lgAuthScan 3.5s ease-in-out infinite !important;
     pointer-events: none !important;
     border-radius: 18px 18px 0 0 !important;
@@ -400,11 +337,9 @@ div[class*="main"] {
     filter: drop-shadow(0 0 14px rgba(0,245,255,0.5)) drop-shadow(0 0 28px rgba(168,85,247,0.3)) !important;
 }
 .lg-auth-sub {
-    text-align: center; font-size: 0.58rem; letter-spacing: clamp(1px, 1vw, 5px);
-    color: #ff2d78; margin-bottom: 2rem;
+    text-align: center; font-size: 0.58rem; letter-spacing: 5px;
+    color: rgba(244,114,182,0.75); margin-bottom: 2rem;
     text-transform: uppercase; font-family: 'Rajdhani', sans-serif;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    max-width: 100%;
 }
 .lg-auth-mode {
     text-align: center; font-size: 0.66rem; letter-spacing: 3px;
@@ -440,7 +375,7 @@ input[type="text"], input[type="password"], input[type="email"] {
     border: 1px solid rgba(168,85,247,0.55) !important;
     border-radius: 8px !important;
     color: #d8e8ff !important;
-    font-size: 16px !important;
+    font-size: 0.95rem !important;
     font-family: 'Rajdhani', sans-serif !important;
     letter-spacing: 0.5px !important;
     padding: 0.55rem 0.9rem !important;
@@ -648,9 +583,8 @@ _AUTH_JS = """
                  document.querySelector('[data-testid="stMain"] .block-container');
         if(bc){
             bc.id = 'auth-container';
-            var _mw = Math.min(500, window.innerWidth * 0.96) + 'px';
-            bc.style.setProperty('max-width',_mw,'important');
-            bc.style.setProperty('width',_mw,'important');
+            bc.style.setProperty('max-width','500px','important');
+            bc.style.setProperty('width','500px','important');
             bc.style.setProperty('margin-left','auto','important');
             bc.style.setProperty('margin-right','auto','important');
             bc.style.setProperty('border','2px solid #00f5ff','important');
@@ -676,32 +610,12 @@ def _login_page():
     style_code = _AUTH_STYLE
     st.markdown(f'<style>{style_code}</style>', unsafe_allow_html=True)
 
-    # 2. Logo + Título (fora de qualquer form)
-    st.markdown("""
-<div style="display:flex;justify-content:center;margin-bottom:1rem;">
-<svg width="160" height="60" viewBox="0 0 280 104" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="la-gring" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#39ff14"/><stop offset="100%" stop-color="#a855f7"/></linearGradient>
-    <linearGradient id="la-gbolt" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#00f5ff"/><stop offset="50%" stop-color="#a855f7"/><stop offset="100%" stop-color="#ff2d78"/></linearGradient>
-    <linearGradient id="la-gt" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00f5ff"/><stop offset="35%" stop-color="#a855f7"/><stop offset="70%" stop-color="#ff2d78"/><stop offset="100%" stop-color="#39ff14"/></linearGradient>
-    <linearGradient id="la-ge" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#00f5ff"/></linearGradient>
-    <clipPath id="la-clip"><rect x="98" y="4" width="84" height="48" rx="24"/></clipPath>
-  </defs>
-  <rect fill="#080b14" width="280" height="104" rx="0"/>
-  <rect fill="#080b14" stroke="url(#la-gring)" stroke-width="3" x="98" y="4" width="84" height="48" rx="24"/>
-  <rect fill="#080b14" x="112" y="16" width="56" height="24" rx="12"/>
-  <g clip-path="url(#la-clip)">
-    <polygon fill="url(#la-gbolt)" points="144,6 132,28 140,28 134,50 150,24 141,24"/>
-  </g>
-  <circle fill="#39ff14" cx="100" cy="28" r="2.5"/>
-  <circle fill="#ff2d78" cx="180" cy="28" r="2.5"/>
-  <text font-family="Orbitron,monospace" font-weight="900" font-size="28" fill="url(#la-gt)" x="140" y="76" text-anchor="middle" letter-spacing="3">LYNGO</text>
-  <rect x="90" y="81" width="100" height="2" rx="1" fill="url(#la-ge)"/>
-  <text font-family="Orbitron,monospace" font-weight="700" font-size="10" fill="url(#la-ge)" x="140" y="96" text-anchor="middle" letter-spacing="7">ELITE</text>
-</svg>
-</div>
-<div class="lg-auth-sub" style="color:#ff2d78;">Plataforma Premium de Afiliados</div>
-""", unsafe_allow_html=True)
+    # 2. Título (fora de qualquer form)
+    st.markdown(
+        '<div class="lg-auth-title">LYNGO ELITE</div>'
+        '<div class="lg-auth-sub">Plataforma Premium de Afiliados</div>',
+        unsafe_allow_html=True,
+    )
 
     # ── MODO LOGIN ────────────────────────────────────────────────────────────
     if st.session_state.auth_mode == "login":
@@ -843,9 +757,6 @@ if not st.session_state.get("logged_in"):
         _login_page()
         st.stop()
 
-    if "sidebar_open" not in st.session_state:
-        st.session_state["sidebar_open"] = True
-
 def _uid() -> int:
     """Retorna o ID do usuário autenticado na sessão atual."""
     return int(st.session_state.get("usuario_id", 0))
@@ -860,8 +771,7 @@ CYBER_CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@300;400;600&display=swap');
 
 /* ── Reset & fundo ── */
-html, body, [data-testid="stAppViewContainer"],
-[data-testid="stMain"], section.main, .main {
+html, body, [data-testid="stAppViewContainer"] {
     background: #080b14 !important;
     color: #e0e6f0 !important;
     font-family: 'Rajdhani', sans-serif;
@@ -869,26 +779,21 @@ html, body, [data-testid="stAppViewContainer"],
 }
 
 /* ── Labels: serão reforçadas após todos os outros estilos (ver bloco abaixo) ── */
-[data-testid="stHeader"] {
-    background: transparent !important;
-}
+[data-testid="stHeader"] { background: transparent !important; }
 
 /* ── Sidebar ── */
 [data-testid="stSidebar"] {
-    background: #080b14 !important;
-    border-right: 1px solid rgba(0,245,255,0.15) !important;
+    background: linear-gradient(180deg, #0d1224 0%, #090c1a 100%) !important;
+    border-right: 1px solid #1a2040;
 }
 [data-testid="stSidebar"] * { color: #c8d4f0 !important; }
 
-/* ── Sidebar nav buttons — borda degradê ciano→roxo→rosa ── */
+/* ── Sidebar nav buttons — borda ciano neon padronizada ── */
 [data-testid="stSidebar"] [data-testid="stButton"] button {
     width: 100% !important;
     background: transparent !important;
-    border: 2px solid transparent !important;
-    background-clip: padding-box !important;
+    border: 2px solid rgba(0,245,255,0.35) !important;
     border-radius: 6px !important;
-    outline: 2px solid transparent !important;
-    box-shadow: 0 0 0 1.5px rgba(0,245,255,0.35), 0 0 6px rgba(0,245,255,0.1) !important;
     color: rgba(0,245,255,0.7) !important;
     font-family: 'Rajdhani', sans-serif !important;
     font-size: 0.78rem !important;
@@ -901,27 +806,29 @@ html, body, [data-testid="stAppViewContainer"],
     transition: all 0.2s ease !important;
     text-align: left !important;
     margin-bottom: 0.2rem !important;
+    box-shadow: 0 0 6px rgba(0,245,255,0.1) !important;
 }
 [data-testid="stSidebar"] [data-testid="stButton"] button:hover {
-    background: rgba(168,85,247,0.07) !important;
-    box-shadow: 0 0 18px rgba(168,85,247,0.4), 0 0 35px rgba(0,245,255,0.2), inset 0 0 8px rgba(168,85,247,0.05) !important;
-    color: #a855f7 !important;
-    text-shadow: 0 0 10px rgba(168,85,247,0.7), 0 0 22px rgba(0,245,255,0.3) !important;
+    background: rgba(0,245,255,0.09) !important;
+    border-color: #00f5ff !important;
+    color: #00f5ff !important;
+    box-shadow: 0 0 20px rgba(0,245,255,0.5), 0 0 40px rgba(0,245,255,0.2), inset 0 0 8px rgba(0,245,255,0.08) !important;
+    text-shadow: 0 0 10px #00f5ff, 0 0 22px rgba(0,245,255,0.5) !important;
     filter: brightness(1.12) !important;
 }
 /* Ativo — classe adicionada via JS ── */
 [data-testid="stSidebar"] [data-testid="stButton"] button.lg-nav-active {
-    border: 1px solid rgba(168,85,247,0.65) !important;
-    color: #a855f7 !important;
-    background: rgba(168,85,247,0.08) !important;
-    box-shadow: 0 0 14px rgba(168,85,247,0.35), 0 0 28px rgba(0,245,255,0.15), inset 0 0 8px rgba(168,85,247,0.06) !important;
-    text-shadow: 0 0 8px rgba(168,85,247,0.8) !important;
+    border: 1px solid rgba(244,114,182,0.65) !important;
+    color: #f472b6 !important;
+    background: rgba(244,114,182,0.08) !important;
+    box-shadow: 0 0 12px rgba(244,114,182,0.22), inset 0 0 8px rgba(244,114,182,0.06) !important;
+    text-shadow: 0 0 8px rgba(244,114,182,0.7) !important;
 }
 [data-testid="stSidebar"] [data-testid="stButton"] button.lg-nav-active:hover {
-    background: rgba(168,85,247,0.14) !important;
-    border-color: #a855f7 !important;
-    box-shadow: 0 0 22px rgba(168,85,247,0.5), 0 0 40px rgba(0,245,255,0.2), inset 0 0 10px rgba(168,85,247,0.1) !important;
-    text-shadow: 0 0 12px rgba(168,85,247,1) !important;
+    background: rgba(244,114,182,0.14) !important;
+    border-color: #f472b6 !important;
+    box-shadow: 0 0 20px rgba(244,114,182,0.38), inset 0 0 10px rgba(244,114,182,0.1) !important;
+    text-shadow: 0 0 12px rgba(244,114,182,1) !important;
 }
 
 .sidebar-logo {
@@ -955,13 +862,11 @@ html, body, [data-testid="stAppViewContainer"],
     font-family: 'Orbitron', sans-serif;
     font-size: 1.75rem;
     font-weight: 800;
-    background: linear-gradient(90deg, #00f5ff 0%, #a855f7 50%, #ff2d78 100%);
+    background: linear-gradient(90deg, #00f5ff 0%, #a855f7 55%, #f472b6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
     margin-bottom: 0.2rem;
     letter-spacing: 1px;
-    filter: drop-shadow(0 0 12px rgba(0,245,255,0.4));
 }
 .page-subtitle {
     color: #4a5a80;
@@ -1021,12 +926,12 @@ html, body, [data-testid="stAppViewContainer"],
 
 /* ── Panel card ── */
 .panel-card {
-    background: #0d1220;
-    border: 1px solid rgba(0,245,255,0.2);
+    background: linear-gradient(135deg, #0d1530 0%, #0a1020 100%);
+    border: 1px solid rgba(0,245,255,0.14);
     border-radius: 12px;
     padding: 1.4rem 1.6rem;
     margin-bottom: 1.2rem;
-    box-shadow: 0 0 20px rgba(0,245,255,0.08), 0 0 40px rgba(168,85,247,0.06), 0 0 60px rgba(255,45,120,0.04);
+    box-shadow: 0 0 18px rgba(0,245,255,0.06), inset 0 0 8px rgba(0,245,255,0.015);
 }
 .panel-card h3 {
     font-family: 'Orbitron', sans-serif;
@@ -1037,8 +942,7 @@ html, body, [data-testid="stAppViewContainer"],
     text-transform: uppercase;
     margin-bottom: 1rem;
     padding-bottom: 0.6rem;
-    border-bottom: 1px solid;
-    border-image: linear-gradient(90deg, transparent, #a855f7, #ff2d78, transparent) 1;
+    border-bottom: 1px solid #1a2545;
 }
 
 /* ── Product card (novo) ── */
@@ -1342,17 +1246,16 @@ html, body, [data-testid="stAppViewContainer"],
     background: #060910 !important;
     border: 1px solid #1e2d50 !important;
     border-radius: 8px !important;
-    color: #e8f8ff !important;
+    color: #c8d4f0 !important;
     font-family: 'Rajdhani', sans-serif !important;
     font-size: 0.95rem !important;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s;
 }
 [data-testid="stTextInput"] input:focus,
 [data-testid="stTextArea"] textarea:focus,
 [data-testid="stNumberInput"] input:focus {
-    border-color: #a855f7 !important;
-    box-shadow: 0 0 0 2px rgba(168,85,247,0.2), 0 0 12px rgba(0,245,255,0.1) !important;
-    color: #e8f8ff !important;
+    border-color: #00f5ff !important;
+    box-shadow: 0 0 0 2px rgba(0,245,255,0.1) !important;
 }
 /* ── Botão base — padrão ciano para TODOS os botões sem classe btn-wrap ── */
 [data-testid="stFormSubmitButton"] > button,
@@ -1397,10 +1300,9 @@ html, body, [data-testid="stAppViewContainer"],
     letter-spacing: 1px;
     text-transform: uppercase;
 }
-.badge-cyan   { background: rgba(0,245,255,0.1);  color: #00f5ff; border: 1px solid rgba(0,245,255,0.3); }
-.badge-purple { background: rgba(168,85,247,0.1); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); }
-.badge-pink   { background: rgba(255,45,120,0.1); color: #ff2d78; border: 1px solid rgba(255,45,120,0.3); }
-.badge-green  { background: rgba(57,255,20,0.08); color: #39ff14; border: 1px solid rgba(57,255,20,0.3); }
+.badge-cyan   { background: rgba(0,245,255,0.1); color: #00f5ff; border: 1px solid rgba(0,245,255,0.25); }
+.badge-purple { background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.25); }
+.badge-pink   { background: rgba(244,114,182,0.1); color: #f9a8d4; border: 1px solid rgba(244,114,182,0.25); }
 
 /* ── Alerts ── */
 .alert-success {
@@ -1621,9 +1523,9 @@ html, body, [data-testid="stAppViewContainer"],
 .btn-wrap-atalho [data-baseweb="button"] {
     background:       transparent !important;
     background-color: transparent !important;
-    border:           2px solid #39ff14 !important;
+    border:           2px solid #00f5ff !important;
     border-radius:    8px !important;
-    color:            #39ff14 !important;
+    color:            #00f5ff !important;
     font-family:      'Rajdhani', sans-serif !important;
     font-weight:      700 !important;
     font-size:        11px !important;
@@ -1642,18 +1544,18 @@ html, body, [data-testid="stAppViewContainer"],
     justify-content:  center !important;
     text-align:       center !important;
     width:            100% !important;
-    box-shadow:       0 0 8px rgba(57,255,20,0.2), inset 0 0 6px rgba(57,255,20,0.02) !important;
+    box-shadow:       0 0 8px rgba(0,245,255,0.2), inset 0 0 6px rgba(0,245,255,0.02) !important;
     cursor:           pointer !important;
     transition:       all 0.2s ease !important;
     overflow:         hidden !important;
 }
 .btn-wrap-atalho button:hover,
 .btn-wrap-atalho [data-baseweb="button"]:hover {
-    background-color: rgba(57,255,20,0.06) !important;
-    border-color:     #a855f7 !important;
-    color:            #a855f7 !important;
-    box-shadow:       0 0 20px rgba(57,255,20,0.4), 0 0 40px rgba(168,85,247,0.3), inset 0 0 10px rgba(57,255,20,0.04) !important;
-    text-shadow:      0 0 10px rgba(57,255,20,0.7), 0 0 24px rgba(168,85,247,0.5) !important;
+    background-color: rgba(0,245,255,0.08) !important;
+    border-color:     #00f5ff !important;
+    color:            #00f5ff !important;
+    box-shadow:       0 0 22px rgba(0,245,255,0.55), 0 0 45px rgba(0,245,255,0.2), inset 0 0 12px rgba(0,245,255,0.08) !important;
+    text-shadow:      0 0 10px #00f5ff, 0 0 24px rgba(0,245,255,0.55) !important;
     filter:           brightness(1.15) !important;
 }
 /* ── Botão Limpar Chat — separado abaixo, esquerda ── */
@@ -1691,6 +1593,24 @@ html, body, [data-testid="stAppViewContainer"],
     text-shadow:      0 0 10px #00f5ff !important;
 }
 
+/* ── Linha de ação do link: flex container unificado ── */
+.lk-action-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+.lk-action-row > div[data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 0 !important;
+}
+.lk-action-row > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    min-height: 2.2rem !important;
+}
 /* ── Link row compacta dentro do expander ── */
 .link-row-compact {
     display: flex;
@@ -1699,15 +1619,6 @@ html, body, [data-testid="stAppViewContainer"],
     padding: 0.28rem 0;
     border-bottom: 1px solid rgba(244,114,182,0.06);
     min-width: 0;
-    min-height: 3rem;
-}
-/* Respiro após o último item da lista de links */
-.panel-card [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"]:last-child,
-.panel-card > div > [data-testid="stVerticalBlock"] > div:last-child {
-    padding-bottom: 0.8rem !important;
-}
-.panel-card {
-    padding-bottom: 1.8rem !important;
 }
 /* Rótulo do link — Rosa neon aceso */
 .link-name-neon {
@@ -1982,20 +1893,16 @@ button[kind="secondary"]:active {
 }
 .vivi-header {
     display: flex; align-items: center; gap: 0.8rem;
-    background: linear-gradient(135deg, rgba(168,85,247,0.1) 0%, rgba(255,45,120,0.06) 100%);
-    border: 1px solid rgba(168,85,247,0.3); border-radius: 10px;
+    background: linear-gradient(135deg, rgba(168,85,247,0.08) 0%, rgba(244,114,182,0.05) 100%);
+    border: 1px solid rgba(168,85,247,0.25); border-radius: 10px;
     padding: 0.8rem 1.2rem; margin-bottom: 1.2rem;
-    box-shadow: 0 0 20px rgba(168,85,247,0.08), 0 0 40px rgba(255,45,120,0.04);
 }
 .vivi-header-name {
     font-family: 'Orbitron', sans-serif; font-size: 1rem;
-    background: linear-gradient(90deg, #a855f7, #ff2d78);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    letter-spacing: 2px;
-    filter: drop-shadow(0 0 8px rgba(168,85,247,0.5));
+    color: #a855f7; letter-spacing: 2px;
+    text-shadow: 0 0 14px rgba(168,85,247,0.6);
 }
-.vivi-header-sub { font-size: 0.75rem; color: #39ff14; letter-spacing: 0.8px; margin-top: 0.1rem; text-shadow: 0 0 8px rgba(57,255,20,0.5); }
+.vivi-header-sub { font-size: 0.75rem; color: #5a4a7a; letter-spacing: 0.8px; margin-top: 0.1rem; }
 .vivi-status-dot {
     width: 8px; height: 8px; border-radius: 50%;
     background: #39ff14; box-shadow: 0 0 8px #39ff14;
@@ -2018,20 +1925,41 @@ footer     { visibility: hidden; }
 [data-testid="stToolbar"]    { visibility: hidden; }
 [data-testid="stDecoration"] { display: none; }
 
-/* ── Sidebar: força visibilidade APENAS no desktop ── */
-/* No mobile, o Streamlit usa transform para drawer — não interferir */
-@media (min-width: 769px) {
-    [data-testid="stSidebar"] {
-        display: block !important;
-        visibility: visible !important;
-        transform: none !important;
-    }
-    /* Streamlit controla a largura no desktop — não interferir */
-    [data-testid="stSidebar"][aria-expanded="false"] {
-        transform: translateX(0) !important;
-    }
+/* ── Sidebar: força visibilidade em Streamlit 1.55 ── */
+/* Sidebar sempre visível e expandida */
+[data-testid="stSidebar"] {
+    display: block !important;
+    visibility: visible !important;
+    transform: none !important;
+    min-width: 220px !important;
 }
-/* Botões nativos de colapso ocultos — controle feito via Python buttons */
+/* Streamlit 1.55 usa aria-expanded para controlar colapso */
+[data-testid="stSidebar"][aria-expanded="false"] {
+    width: auto !important;
+    min-width: 220px !important;
+    transform: translateX(0) !important;
+}
+/* Botão de colapso sempre visível */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"],
+[data-testid="stSidebarNavCollapsedControl"] {
+    visibility: visible !important;
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 999 !important;
+}
+/* Ícone da seta */
+[data-testid="stSidebarCollapseButton"] svg,
+[data-testid="collapsedControl"] svg {
+    fill: rgba(0,245,255,0.5) !important;
+    transition: fill 0.2s !important;
+}
+[data-testid="stSidebarCollapseButton"]:hover svg,
+[data-testid="collapsedControl"]:hover svg {
+    fill: #00f5ff !important;
+    filter: drop-shadow(0 0 4px rgba(0,245,255,0.6)) !important;
+}
 
 /* ══════════════════════════════════════════════════════
    LABELS — bloco final, vence qualquer regra anterior
@@ -2101,287 +2029,10 @@ div[data-baseweb="form-control"] label {
     text-shadow: 0 0 10px #ff007f, 0 0 24px rgba(255,0,127,0.5) !important;
     filter: brightness(1.12) !important;
 }
-
-/* ══════════════════════════════════════════════════════
-   MOBILE RESPONSIVO — max-width: 768px
-   ══════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-
-    /* ── Container principal ── */
-    .block-container,
-    [data-testid="stMain"] .block-container {
-        padding: 0.75rem 0.6rem 2rem 0.6rem !important;
-        max-width: 100% !important;
-    }
-
-    /* ── Metric grid: 2x2 em vez de 4x1 ── */
-    .metric-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 0.65rem !important;
-    }
-    .metric-card {
-        padding: 0.85rem 0.9rem !important;
-    }
-    .metric-value {
-        font-size: 1.35rem !important;
-    }
-    .metric-label {
-        font-size: 0.62rem !important;
-    }
-
-    /* ── Título de página ── */
-    .page-title {
-        font-size: 1.25rem !important;
-    }
-    .page-subtitle {
-        font-size: 0.72rem !important;
-        margin-bottom: 1rem !important;
-    }
-
-    /* ── Colunas Streamlit: empilhar verticalmente ── */
-    [data-testid="stHorizontalBlock"],
-    [data-testid="stColumns"] {
-        flex-direction: column !important;
-        gap: 0.5rem !important;
-    }
-    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"],
-    [data-testid="stHorizontalBlock"] > [data-testid="column"],
-    [data-testid="stColumns"] > [data-testid="column"] {
-        width: 100% !important;
-        min-width: 100% !important;
-        flex: 1 1 calc(100% - 1rem) !important;
-    }
-
-    /* ── Panel card ── */
-    .panel-card {
-        padding: 0.85rem 0.9rem !important;
-        margin-bottom: 0.75rem !important;
-    }
-    .panel-card h3 {
-        font-size: 0.75rem !important;
-        letter-spacing: 1.5px !important;
-    }
-
-    /* ── Produto row: layout simplificado ── */
-    .produto-row {
-        grid-template-columns: 1fr auto !important;
-        gap: 0.4rem !important;
-        padding: 0.6rem 0.75rem !important;
-    }
-    .produto-desc { display: none !important; }
-
-    /* ── Produto card ── */
-    .produto-card {
-        padding: 0.8rem 0.9rem 0.65rem 0.9rem !important;
-    }
-
-    /* ── Expander ── */
-    [data-testid="stExpander"] summary,
-    [data-testid="stExpander"] [role="button"] {
-        font-size: 0.82rem !important;
-        padding: 0.5rem 0.75rem !important;
-    }
-
-    /* ── Formulários ── */
-    [data-testid="stForm"] {
-        padding: 1rem !important;
-    }
-
-    /* ── Auth container: sem bordas arredondadas no mobile ── */
-    .main .block-container {
-        max-width: 100% !important;
-        width: 100% !important;
-        border-radius: 12px !important;
-        padding: 1.6rem 1.2rem !important;
-    }
-
-    /* ── Chat input ── */
-    [data-testid="stChatInput"] {
-        font-size: 0.88rem !important;
-    }
-
-    /* ── Atalhos VIBEL ── */
-    .btn-wrap-atalho button,
-    .btn-wrap-atalho [data-baseweb="button"] {
-        font-size: 9px !important;
-        padding: 0 4px !important;
-        letter-spacing: 0.2px !important;
-        height: 44px !important;
-        min-height: 44px !important;
-    }
-
-    /* ── Botões de ação compactos ── */
-    .btn-wrap-cyan button, .btn-wrap-pink button, .btn-wrap-red button {
-        font-size: 0.6rem !important;
-        padding: 0 0.4rem !important;
-        min-height: 30px !important;
-        height: 30px !important;
-    }
-
-    /* ── Texto truncado nos links ── */
-    .link-url-dim, .link-url-text, .pc-link-chip {
-        font-size: 0.65rem !important;
-    }
-
-    /* ── Badges ── */
-    .badge {
-        font-size: 0.62rem !important;
-        padding: 0.1rem 0.45rem !important;
-    }
-
-}
 </style>
 """
 
 st.markdown(CYBER_CSS, unsafe_allow_html=True)
-
-# ── CSS Responsivo — Desktop amplo / Mobile empilhado ────────────────────────
-st.markdown("""
-<style>
-
-/* ══════════════════════════════════════════════════════
-   DESKTOP (>768px) — garante layout amplo e profissional
-   Restaura explicitamente qualquer propriedade que possa
-   ter sido forçada por regras genéricas.
-   ══════════════════════════════════════════════════════ */
-@media (min-width: 769px) {
-    /* Colunas lado a lado — nunca empilhar no desktop */
-    [data-testid="column"],
-    [data-testid="stColumn"] {
-        width: unset !important;
-        flex: unset !important;
-        min-width: unset !important;
-    }
-    /* Containers com largura normal */
-    [data-testid="stHorizontalBlock"],
-    [data-testid="stColumns"] {
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-    }
-    /* DataFrames sem display forçado */
-    [data-testid="stDataFrame"],
-    [data-testid="stTable"],
-    .stDataFrame, .stTable {
-        display: revert !important;
-        overflow-x: unset !important;
-    }
-    /* Logo: tamanho livre no sidebar desktop */
-    [data-testid="stSidebar"] svg,
-    [data-testid="stSidebar"] img {
-        max-width: 100%;
-        height: auto;
-    }
-}
-
-/* ══════════════════════════════════════════════════════
-   iOS anti-zoom — 16px impede zoom automático ao focar
-   (aplicado globalmente; não afeta visualmente o desktop)
-   ══════════════════════════════════════════════════════ */
-input, textarea, select {
-    font-size: 16px !important;
-}
-
-/* ══════════════════════════════════════════════════════
-   MOBILE 768px — empilha colunas, padding lateral 1rem
-   ══════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-
-    /* Container sem espaço desperdiçado nas laterais */
-    .main .block-container {
-        max-width: 95vw !important;
-        width: 95vw !important;
-        padding: 1rem !important;
-    }
-
-    /* Tabelas com scroll horizontal */
-    [data-testid="stDataFrame"],
-    [data-testid="stTable"],
-    .stDataFrame, .stTable {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        display: block !important;
-    }
-
-    /* Inputs 16px — reforço para iOS */
-    input, textarea, select,
-    [data-testid="stTextInput"] input,
-    [data-testid="stTextArea"] textarea,
-    [data-testid="stNumberInput"] input,
-    [data-testid="stChatInput"] textarea {
-        font-size: 16px !important;
-    }
-
-    /* vivi-header compacto */
-    .vivi-header { padding: 0.6rem 0.85rem !important; gap: 0.5rem !important; }
-    .vivi-header-name { font-size: 0.82rem !important; }
-    .vivi-header-sub { font-size: 0.65rem !important; }
-
-    /* Logo sidebar */
-    [data-testid="stSidebar"] svg { max-width: 130px !important; height: auto !important; }
-    .main .block-container svg { max-width: 130px !important; height: auto !important; }
-
-    /* Atalhos VIBEL: flex-wrap em 2 colunas */
-    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho),
-    [data-testid="stColumns"]:has(.btn-wrap-atalho) { flex-wrap: wrap !important; }
-    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="stColumn"],
-    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="column"],
-    [data-testid="stColumns"]:has(.btn-wrap-atalho) > [data-testid="column"] {
-        min-width: 45% !important;
-        flex: 1 1 45% !important;
-    }
-    /* Botões de atalho: largura total no mobile */
-    .btn-wrap-atalho button,
-    .btn-wrap-atalho [data-baseweb="button"] {
-        width: 100% !important;
-    }
-
-    /* Labels menores */
-    label, [data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] p {
-        font-size: 0.62rem !important;
-        letter-spacing: 1.2px !important;
-    }
-    [data-testid="stForm"] { padding: 0.9rem !important; }
-
-    /* Títulos compactos */
-    .lg-auth-title, .page-title {
-        font-size: 1.1rem !important;
-        letter-spacing: 1px !important;
-    }
-}
-
-/* ══════════════════════════════════════════════════════
-   MOBILE 480px — telefones pequenos
-   ══════════════════════════════════════════════════════ */
-@media (max-width: 480px) {
-
-    .metric-grid { grid-template-columns: 1fr !important; }
-    .metric-card { padding: 0.7rem 0.8rem !important; }
-    .page-title { font-size: 1rem !important; }
-
-    /* Sidebar em modo drawer: Streamlit controla a largura */
-
-    /* Atalhos VIBEL: 1 por linha */
-    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="stColumn"],
-    [data-testid="stHorizontalBlock"]:has(.btn-wrap-atalho) > [data-testid="column"],
-    [data-testid="stColumns"]:has(.btn-wrap-atalho) > [data-testid="column"] {
-        min-width: 100% !important;
-        flex: 1 1 100% !important;
-    }
-    .btn-wrap-atalho button, .btn-wrap-atalho [data-baseweb="button"] {
-        height: 40px !important; min-height: 40px !important; font-size: 10px !important;
-    }
-
-    /* Auth card */
-    .main .block-container {
-        border-radius: 10px !important;
-        padding: 1.2rem 0.85rem 1.4rem !important;
-    }
-    [data-testid="stChatInput"] textarea::placeholder { font-size: 14px !important; }
-    .panel-card { padding: 0.75rem 0.8rem !important; }
-}
-
-</style>
-""", unsafe_allow_html=True)
 
 # ── CSS nuclear — sobrescreve BaseWeb do Streamlit ────────────────────────────
 st.markdown("""
@@ -2397,25 +2048,6 @@ button[kind="secondary"]:active {
     background-color: transparent !important;
     background:       transparent !important;
     color: inherit !important;
-}
-/* Botões de ação alinhados — altura e largura uniformes */
-.btn-wrap-cyan button,
-.btn-wrap-cyan [data-baseweb="button"],
-.btn-wrap-cyan > div > button,
-.btn-wrap-pink button,
-.btn-wrap-pink [data-baseweb="button"],
-.btn-wrap-pink > div > button,
-.btn-wrap-red button,
-.btn-wrap-red [data-baseweb="button"],
-.btn-wrap-red > div > button {
-    min-height: 2.2rem !important;
-    height: 2.2rem !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    white-space: nowrap !important;
 }
 /* Botão ENCURTAR — ciano outline, sem fundo */
 .btn-wrap-cyan button,
@@ -2657,7 +2289,7 @@ def get_db():
 def _ensure_demo_user(db):
     user = db.query(Usuario).first()
     if not user:
-        user = Usuario(nome="Demo User", email="demo@lyngo.com.br")
+        user = Usuario(nome="Demo User", email="demo@linkguard.app")
         db.add(user)
         db.commit()
         db.refresh(user)
@@ -2709,79 +2341,30 @@ _LOGO_PATHS = [
 ]
 _LOGO_FILE = next((p for p in _LOGO_PATHS if os.path.exists(p)), None)
 
-_sidebar_open = st.session_state.get("sidebar_open", True)
-
-if _sidebar_open:
-    st.markdown("""
-    <style>
-    [data-testid="stSidebar"],
-    section[data-testid="stSidebar"] {
-        display: flex !important;
-        visibility: visible !important;
-        width: 21rem !important;
-        min-width: 21rem !important;
-        max-width: 21rem !important;
-        transform: none !important;
-        left: 0 !important;
-        position: relative !important;
-    }
-    [data-testid="stSidebarContent"] {
-        width: 21rem !important;
-        min-width: 21rem !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-else:
-    st.markdown("""
-    <style>
-    [data-testid="stSidebar"],
-    section[data-testid="stSidebar"],
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapseButton"] {
-        display: none !important;
-        width: 0 !important;
-        min-width: 0 !important;
-        visibility: hidden !important;
-    }
-    .main .block-container {
-        max-width: 100% !important;
-        padding-left: 1rem !important;
-        margin-left: 0 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    if st.button("☰ MENU", key="btn_abrir_menu"):
-        st.session_state["sidebar_open"] = True
-        st.rerun()
-
 with st.sidebar:
     # Logo do topo
     st.markdown('<div style="padding:0.6rem 0.5rem 0.2rem 0.5rem;">', unsafe_allow_html=True)
-    # Logo SVG inline centralizado
-    st.markdown("""
-    <div style="display:flex;justify-content:center;align-items:center;padding:0.4rem 0 0.2rem 0;">
-    <svg width="160" height="60" viewBox="0 0 280 104" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="lg-gring" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#39ff14"/><stop offset="100%" stop-color="#a855f7"/></linearGradient>
-        <linearGradient id="lg-gbolt" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#00f5ff"/><stop offset="50%" stop-color="#a855f7"/><stop offset="100%" stop-color="#ff2d78"/></linearGradient>
-        <linearGradient id="lg-gt" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00f5ff"/><stop offset="35%" stop-color="#a855f7"/><stop offset="70%" stop-color="#ff2d78"/><stop offset="100%" stop-color="#39ff14"/></linearGradient>
-        <linearGradient id="lg-ge" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#00f5ff"/></linearGradient>
-        <clipPath id="lg-clip"><rect x="98" y="4" width="84" height="48" rx="24"/></clipPath>
-      </defs>
-      <rect fill="#080b14" width="280" height="104" rx="0"/>
-      <rect fill="#080b14" stroke="url(#lg-gring)" stroke-width="3" x="98" y="4" width="84" height="48" rx="24"/>
-      <rect fill="#080b14" x="112" y="16" width="56" height="24" rx="12"/>
-      <g clip-path="url(#lg-clip)">
-        <polygon fill="url(#lg-gbolt)" points="144,6 132,28 140,28 134,50 150,24 141,24"/>
-      </g>
-      <circle fill="#39ff14" cx="100" cy="28" r="2.5"/>
-      <circle fill="#ff2d78" cx="180" cy="28" r="2.5"/>
-      <text font-family="Orbitron,monospace" font-weight="900" font-size="28" fill="url(#lg-gt)" x="140" y="76" text-anchor="middle" letter-spacing="3">LYNGO</text>
-      <rect x="90" y="81" width="100" height="2" rx="1" fill="url(#lg-ge)"/>
-      <text font-family="Orbitron,monospace" font-weight="700" font-size="10" fill="url(#lg-ge)" x="140" y="96" text-anchor="middle" letter-spacing="7">ELITE</text>
-    </svg>
-    </div>
-    """, unsafe_allow_html=True)
+    if _LOGO_FILE:
+        st.image(_LOGO_FILE, width=200)
+    else:
+        # Fallback SVG inline se arquivo não existir
+        st.markdown("""
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 60" width="210" height="50">
+          <defs>
+            <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#00f5ff"/>
+              <stop offset="100%" style="stop-color:#f472b6"/>
+            </linearGradient>
+          </defs>
+          <rect x="4" y="6" width="44" height="44" rx="10" fill="url(#lg)" opacity="0.12"/>
+          <rect x="4" y="6" width="44" height="44" rx="10" fill="none" stroke="url(#lg)" stroke-width="1.5"/>
+          <text x="26" y="34" text-anchor="middle" font-size="20" fill="url(#lg)" font-family="Arial">⇔</text>
+          <text x="58" y="27" font-family="Arial Black,sans-serif" font-size="16" font-weight="900"
+                letter-spacing="2" fill="url(#lg)">LYNGO</text>
+          <text x="58" y="44" font-family="Arial Black,sans-serif" font-size="10" font-weight="700"
+                letter-spacing="5" fill="#f472b6" opacity="0.9">ELITE</text>
+        </svg>
+        """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<hr class="sidebar-divider" style="margin:0.3rem 0 0.6rem 0;">', unsafe_allow_html=True)
 
@@ -2809,6 +2392,19 @@ with st.sidebar:
 <script>
 (function() {{
     var active = {repr(_active_page)};
+
+    /* ── Força sidebar expandida (Streamlit 1.55 usa aria-expanded) ── */
+    function forceExpand() {{
+        var sb = document.querySelector('[data-testid="stSidebar"]');
+        if (!sb) return;
+        /* Se estiver colapsada, clica no botão de colapso para reabrir */
+        if (sb.getAttribute('aria-expanded') === 'false') {{
+            var btn = document.querySelector('[data-testid="stSidebarCollapseButton"]')
+                   || document.querySelector('[data-testid="collapsedControl"] button');
+            if (btn) btn.click();
+        }}
+    }}
+    setTimeout(forceExpand, 300);
 
     /* ── Marca botão ativo no menu ── */
     function markNav() {{
@@ -2857,15 +2453,30 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-
 page = st.session_state.page
 
+# ── Fallback: botão para reabrir menu se sidebar sumir ────────────────────────
+st.markdown("""
+<style>
+#lg-menu-btn { position:fixed; top:0.4rem; left:0.4rem; z-index:99999;
+    background:transparent; border:1px solid rgba(0,245,255,0.35);
+    border-radius:4px; color:#00f5ff; font-size:0.7rem; padding:0.2rem 0.5rem;
+    cursor:pointer; font-family:'Rajdhani',sans-serif; letter-spacing:1px; }
+#lg-menu-btn:hover { background:rgba(0,245,255,0.12); box-shadow:0 0 8px rgba(0,245,255,0.4); }
+/* Oculta o botão se sidebar estiver visível e expandida */
+body:has([data-testid="stSidebar"][aria-expanded="true"]) #lg-menu-btn { display:none; }
+</style>
+<button id="lg-menu-btn" onclick="
+    var sb = document.querySelector('[data-testid=\\'stSidebar\\']');
+    var btn = document.querySelector('[data-testid=\\'stSidebarCollapseButton\\']')
+           || document.querySelector('[data-testid=\\'collapsedControl\\'] button');
+    if(btn) btn.click();
+" title="Abrir Menu">☰ MENU</button>
+""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Container principal — gera .st-key-main_layout no DOM para CSS targeting
+# DASHBOARD
 # ─────────────────────────────────────────────────────────────────────────────
-_main_layout = st.container(key="main_layout")
-
 if page == "Dashboard":
     st.markdown('<div class="page-title">Dashboard</div>', unsafe_allow_html=True)
     st.markdown('<div class="page-subtitle">Visão geral da sua operação</div>', unsafe_allow_html=True)
@@ -3413,6 +3024,7 @@ elif page == "Gestão de Produtos":
                             )
 
                             # ── Linha única: info + copiar + encurtar + editar + deletar ──
+                            st.markdown('<div class="lk-action-row">', unsafe_allow_html=True)
                             _l1, _l2, _l3, _l4, _l5 = st.columns([3, 1, 2, 2, 2], vertical_alignment="center")
                             with _l1:
                                 st.markdown(
@@ -3458,6 +3070,7 @@ elif page == "Gestão de Produtos":
                                     _ss.editing_link_id        = None
                                     st.rerun()
                                 st.markdown('</div>', unsafe_allow_html=True)
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                             # URL encurtada (exibida abaixo quando disponível)
                             if bitly_url:
@@ -3641,7 +3254,7 @@ elif page == "Gerador de Links":
                         link = Link(produto_id=p_sel.id, url_original=url_original.strip(), url_encurtada=slug)
                         db.add(link)
                         db.commit()
-                        st.markdown(f'<div class="alert-success"><i class="fa-solid fa-check"></i> Link criado: <strong>lyngo.com.br/{slug}</strong></div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="alert-success"><i class="fa-solid fa-check"></i> Link criado: <strong>linkguard.app/{slug}</strong></div>', unsafe_allow_html=True)
                     except Exception as e:
                         db.rollback()
                         st.markdown(f'<div class="alert-error">Erro: {e}</div>', unsafe_allow_html=True)
@@ -3792,7 +3405,7 @@ elif page == "VIBEL AI":
             <div style="font-size:2rem;">⚡</div>
             <div>
                 <div class="vivi-header-name">VIBEL AI</div>
-                <div class="vivi-header-sub">LYNGO ELITE</div>
+                <div class="vivi-header-sub">LINKGUARD ESTRATEGISTA</div>
             </div>
             <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
                 <div class="vivi-status-dot"></div>
@@ -3808,7 +3421,7 @@ elif page == "VIBEL AI":
                     "role": "assistant",
                     "content": (
                         "⚡ **VIBEL ONLINE**\n\n"
-                        "Sistema ativado. Sou a VIBEL AI — sua estrategista de vendas e copy do Lyngo Elite. "
+                        "Sistema ativado. Sou a VIBEL AI — sua estrategista de vendas e copy do LinkGuard. "
                         "Estou pronta para turbinar seus funis, criar scripts de alta conversão e otimizar cada link. "
                         "Por onde começamos?"
                     ),
@@ -3993,7 +3606,7 @@ elif page == "Configurações":
             '<span style="font-size:0.78rem;color:#34d399;letter-spacing:1px;">TinyURL ativo — sem token, sem limite</span>'
             '</div>'
             '<p style="font-size:0.78rem;color:#4a5a80;line-height:1.55;margin:0;">'
-            'O Lyngo Elite usa a API pública do <strong style="color:#7a9acc;">TinyURL</strong> '
+            'O LinkGuard usa a API pública do <strong style="color:#7a9acc;">TinyURL</strong> '
             'para encurtar links. Gratuita, sem cadastro e sem limites de uso. '
             'Basta clicar em <strong style="color:#00f5ff;">⚡ Encurtar</strong> em qualquer link.'
             '</p>',
@@ -4004,7 +3617,7 @@ elif page == "Configurações":
         with col_test:
             st.markdown('<div class="btn-wrap-cyan">', unsafe_allow_html=True)
             if st.button("⚡ Testar encurtador", use_container_width=True):
-                ok, res = encurtar_link("https://lyngo.com.br/teste-tinyurl")
+                ok, res = encurtar_link("https://linkguard.app/teste-tinyurl")
                 if ok:
                     st.markdown(
                         f'<div class="alert-success">'
@@ -4074,245 +3687,3 @@ elif page == "Configurações":
         </div>
         """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
-
-# ═════════════════════════════════════════════════════════════════════════════
-# CSS TERMINAL — injetado APÓS todo o conteúdo da página.
-# Último a ser parseado → ganha a cascata.
-# Especificidade máxima via [data-testid="stAppViewContainer"] + .st-key-main_layout
-# ═════════════════════════════════════════════════════════════════════════════
-st.markdown("""
-<style>
-
-/* ── Sidebar: fundo sólido para não vazar texto sobre o dashboard ─────────── */
-[data-testid="stSidebar"],
-section[data-testid="stSidebar"] {
-    background-color: #0E1117 !important;
-}
-
-/* Conteúdo interno da sidebar: sempre visível */
-[data-testid="stSidebarUserContent"] {
-    opacity: 1 !important;
-    visibility: visible !important;
-}
-
-/* ── Cor Ciano Neon em todos os botões de menu e setas ─────────────────────── */
-button[kind="header"] svg,
-[data-testid="stSidebarNav"] svg,
-.st-emotion-cache-6qob1r svg,
-[data-testid="stSidebarCollapseButton"] svg,
-[data-testid="collapsedControl"] svg,
-[data-testid="stSidebarNavCollapsedControl"] svg {
-    fill: #00f2ff !important;
-    color: #00f2ff !important;
-    width: 30px !important;
-    height: 30px !important;
-}
-
-/* Botão de abrir/fechar: destaque visual circular */
-button[kind="header"] {
-    background-color: rgba(0, 242, 255, 0.1) !important;
-    border-radius: 50% !important;
-}
-
-/* Botão do cabeçalho (classe emotion): destaque e clicável */
-.st-emotion-cache-18ni7ap {
-    background-color: rgba(0, 242, 255, 0.1) !important;
-    border-radius: 8px !important;
-}
-
-/* Header: transparente, todos os elementos nativos clicáveis */
-[data-testid="stHeader"] {
-    background: transparent !important;
-}
-/* .main sem margin-top que cubra a barra de navegação */
-.main,
-section.main,
-[data-testid="stMain"] {
-    margin-top: 0 !important;
-    z-index: auto !important;
-}
-.main .block-container,
-section.main .block-container,
-[data-testid="stMain"] .block-container,
-.block-container {
-    isolation: isolate;
-    z-index: auto !important;
-}
-
-/* ── DESKTOP (>768px): layout amplo, colunas LADO A LADO ──────────────────── */
-@media (min-width: 769px) {
-
-    /* Sidebar sempre visível no desktop — botão interno (seta) controla colapso */
-    [data-testid="stSidebar"] {
-        display: block !important;
-        visibility: visible !important;
-    }
-
-    /* Container: max 1200px, respira sem forçar largura total */
-    [data-testid="stAppViewContainer"] .block-container,
-    [data-testid="stAppViewContainer"] [data-testid="stMain"] .block-container {
-        max-width: 1200px !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
-    }
-
-    /* Bloco horizontal: sempre linha, nunca empilhar */
-    [data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"],
-    [data-testid="stAppViewContainer"] [data-testid="stColumns"] {
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: flex-start !important;
-    }
-
-    /* Colunas: deixa o Streamlit calcular o flex (unset remove nosso override) */
-    [data-testid="stAppViewContainer"] [data-testid="stColumn"],
-    [data-testid="stAppViewContainer"] [data-testid="column"],
-    .st-key-main_layout [data-testid="stColumn"],
-    .st-key-main_layout [data-testid="column"] {
-        width: unset !important;
-        flex: unset !important;
-        min-width: unset !important;
-    }
-}
-
-/* ── MOBILE (<=768px) ─────────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-
-    /* Sidebar: fundo sólido + 280px + acima do dashboard */
-    [data-testid="stSidebar"],
-    section[data-testid="stSidebar"] {
-        background-color: #0E1117 !important;
-        z-index: 1000000 !important;
-        width: 280px !important;
-    }
-
-    /* Conteúdo principal: largura total */
-    [data-testid="stAppViewContainer"] .block-container,
-    [data-testid="stAppViewContainer"] [data-testid="stMain"] .block-container,
-    .st-key-main_layout .block-container {
-        max-width: 100% !important;
-        width: 100% !important;
-        padding: 1rem !important;
-    }
-
-    /* Blocos horizontais viram colunas */
-    [data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"],
-    [data-testid="stAppViewContainer"] [data-testid="stColumns"],
-    .st-key-main_layout [data-testid="stHorizontalBlock"],
-    .st-key-main_layout [data-testid="stColumns"] {
-        flex-direction: column !important;
-        flex-wrap: wrap !important;
-        gap: 0.75rem !important;
-    }
-
-    /* Cada coluna ocupa 100% da largura */
-    [data-testid="stAppViewContainer"] [data-testid="stColumn"],
-    [data-testid="stAppViewContainer"] [data-testid="column"],
-    .st-key-main_layout [data-testid="stColumn"],
-    .st-key-main_layout [data-testid="column"] {
-        width: 100% !important;
-        flex: 1 1 100% !important;
-        min-width: 100% !important;
-        max-width: 100% !important;
-    }
-
-    /* Botões: largura total no mobile */
-    [data-testid="stAppViewContainer"] .stButton > button,
-    .st-key-main_layout .stButton > button {
-        width: 100% !important;
-    }
-
-    /* Formulários sem padding excessivo */
-    [data-testid="stAppViewContainer"] [data-testid="stForm"],
-    .st-key-main_layout [data-testid="stForm"] {
-        padding: 0.9rem !important;
-    }
-}
-
-/* ── MOBILE PEQUENO (<=480px) ─────────────────────────────────────────────── */
-@media (max-width: 480px) {
-
-    [data-testid="stAppViewContainer"] .block-container {
-        padding: 3rem 0.75rem 0.75rem 0.75rem !important;
-    }
-
-    /* Sidebar aberta em telas pequenas: manter 300px definido globalmente */
-}
-
-/* ── Nenhum container do conteúdo principal cria contexto de empilhamento ── */
-[data-testid="stAppViewContainer"],
-[data-testid="stMain"],
-section.main,
-.main,
-.block-container,
-[data-testid="stVerticalBlock"] {
-    z-index: auto !important;
-    isolation: auto !important;
-}
-
-
-
-</style>
-""", unsafe_allow_html=True)
-
-# ── CSS: botões MENU/Fechar e ocultação dos controles nativos do Streamlit ──
-st.markdown("""
-<style>
-/* Esconde os botões nativos de colapso/expansão — substituídos pelos Python buttons */
-[data-testid="stSidebarCollapseButton"],
-[data-testid="collapsedControl"],
-[data-testid="stSidebarNavCollapsedControl"] {
-    display: none !important;
-}
-
-/* Wrapper do botão MENU fixo no topo esquerdo */
-.lg-menu-btn-wrapper {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    z-index: 2147483647;
-}
-.lg-menu-btn-wrapper button {
-    background: rgba(0, 0, 0, 0.85) !important;
-    color: #00f2ff !important;
-    border: 1px solid rgba(0, 242, 255, 0.5) !important;
-    border-radius: 6px !important;
-    font-family: 'Orbitron', monospace !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    letter-spacing: 1px !important;
-    padding: 5px 12px !important;
-    cursor: pointer !important;
-    white-space: nowrap !important;
-    box-shadow: 0 0 8px rgba(0, 242, 255, 0.2) !important;
-    transition: background 0.2s, box-shadow 0.2s !important;
-}
-.lg-menu-btn-wrapper button:hover {
-    background: rgba(0, 242, 255, 0.12) !important;
-    box-shadow: 0 0 14px rgba(0, 242, 255, 0.45) !important;
-}
-
-/* Botão fechar dentro da sidebar */
-.lg-close-sidebar-wrap {
-    display: flex;
-    justify-content: flex-end;
-    padding: 0 0.2rem 0.4rem 0;
-}
-.lg-close-sidebar-wrap button {
-    background: transparent !important;
-    color: #00f2ff !important;
-    border: 1px solid rgba(0, 242, 255, 0.3) !important;
-    border-radius: 6px !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    letter-spacing: 1px !important;
-    padding: 3px 10px !important;
-    cursor: pointer !important;
-    transition: background 0.2s, box-shadow 0.2s !important;
-}
-.lg-close-sidebar-wrap button:hover {
-    background: rgba(0, 242, 255, 0.1) !important;
-    box-shadow: 0 0 8px rgba(0, 242, 255, 0.35) !important;
-}
-</style>
-""", unsafe_allow_html=True)
