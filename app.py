@@ -1699,6 +1699,7 @@ html, body, [data-testid="stAppViewContainer"],
     padding: 0.28rem 0;
     border-bottom: 1px solid rgba(244,114,182,0.06);
     min-width: 0;
+    min-height: 3rem;
 }
 /* Respiro após o último item da lista de links */
 .panel-card [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"]:last-child,
@@ -2407,8 +2408,8 @@ button[kind="secondary"]:active {
 .btn-wrap-red button,
 .btn-wrap-red [data-baseweb="button"],
 .btn-wrap-red > div > button {
-    min-height: 2rem !important;
-    height: 2rem !important;
+    min-height: 2.2rem !important;
+    height: 2.2rem !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     display: flex !important;
