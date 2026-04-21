@@ -1700,6 +1700,14 @@ html, body, [data-testid="stAppViewContainer"],
     border-bottom: 1px solid rgba(244,114,182,0.06);
     min-width: 0;
 }
+/* Respiro após o último item da lista de links */
+.panel-card [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"]:last-child,
+.panel-card > div > [data-testid="stVerticalBlock"] > div:last-child {
+    padding-bottom: 0.8rem !important;
+}
+.panel-card {
+    padding-bottom: 1.8rem !important;
+}
 /* Rótulo do link — Rosa neon aceso */
 .link-name-neon {
     font-family: 'Rajdhani', sans-serif;
@@ -2388,6 +2396,25 @@ button[kind="secondary"]:active {
     background-color: transparent !important;
     background:       transparent !important;
     color: inherit !important;
+}
+/* Botões de ação alinhados — altura e largura uniformes */
+.btn-wrap-cyan button,
+.btn-wrap-cyan [data-baseweb="button"],
+.btn-wrap-cyan > div > button,
+.btn-wrap-pink button,
+.btn-wrap-pink [data-baseweb="button"],
+.btn-wrap-pink > div > button,
+.btn-wrap-red button,
+.btn-wrap-red [data-baseweb="button"],
+.btn-wrap-red > div > button {
+    min-height: 2rem !important;
+    height: 2rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
 }
 /* Botão ENCURTAR — ciano outline, sem fundo */
 .btn-wrap-cyan button,
