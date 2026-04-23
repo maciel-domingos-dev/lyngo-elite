@@ -6,6 +6,7 @@ from datetime import datetime as _dt
 from database import (
     init_db, SessionLocal, Produto, Usuario, Link, Venda, ClickEvent,
     verificar_senha, criar_token, validar_token, revogar_token,
+    verificar_plano, incrementar_vibel, LIMITE_TRIAL,
 )
 
 # ── Inicializa banco ──────────────────────────────────────────────────────────
@@ -349,41 +350,60 @@ div[class*="main"] {
 #auth-container,
 .main .block-container,
 [data-testid="stMain"] .block-container {
-    max-width: min(500px, 96vw) !important;
-    width: min(500px, 96vw) !important;
+    max-width: min(480px, 96vw) !important;
+    width: min(480px, 96vw) !important;
     margin: 0 auto !important;
 }
 
 .main .block-container {
-    max-width: min(500px, 96vw) !important;
-    width: min(500px, 96vw) !important;
+    max-width: min(480px, 96vw) !important;
+    width: min(480px, 96vw) !important;
     margin: 0 auto !important;
-    padding: 2.6rem clamp(1rem, 5vw, 2.4rem) 2.2rem !important;
-    background: linear-gradient(#090e1b, #060810) padding-box,
-                linear-gradient(135deg, #00f5ff, #a855f7, #ff2d78) border-box !important;
-    border: 2px solid transparent !important;
-    border-radius: 18px !important;
-    box-shadow:
-        0 0 40px rgba(0,245,255,0.3),
-        0 0 80px rgba(168,85,247,0.2),
-        0 0 120px rgba(255,45,120,0.1),
-        inset 0 0 30px rgba(0,245,255,0.03) !important;
+    padding: 2.8rem clamp(1.2rem, 5vw, 2.6rem) 2.4rem !important;
+    background: linear-gradient(160deg, #080e1e 0%, #050810 60%, #080b18 100%) !important;
+    border-radius: 20px !important;
     position: relative !important;
+    border: 2px solid #00f5ff !important;
+    animation: lgCardBorder 3s ease-in-out infinite !important;
+    box-shadow:
+        0 0 25px rgba(0,245,255,0.35),
+        0 0 60px rgba(168,85,247,0.2),
+        0 0 100px rgba(255,45,120,0.1),
+        inset 0 0 30px rgba(0,245,255,0.03) !important;
+}
+
+@keyframes lgCardBorder {
+    0%   { border-color: #00f5ff;
+           box-shadow: 0 0 25px rgba(0,245,255,0.45), 0 0 60px rgba(168,85,247,0.15), inset 0 0 20px rgba(0,245,255,0.03); }
+    33%  { border-color: #a855f7;
+           box-shadow: 0 0 25px rgba(168,85,247,0.45), 0 0 60px rgba(255,45,120,0.15), inset 0 0 20px rgba(168,85,247,0.03); }
+    66%  { border-color: #ff2d78;
+           box-shadow: 0 0 25px rgba(255,45,120,0.45), 0 0 60px rgba(0,245,255,0.15), inset 0 0 20px rgba(255,45,120,0.03); }
+    100% { border-color: #00f5ff;
+           box-shadow: 0 0 25px rgba(0,245,255,0.45), 0 0 60px rgba(168,85,247,0.15), inset 0 0 20px rgba(0,245,255,0.03); }
 }
 
 @keyframes lgAuthScan {
-    0%   { top: 0%;   opacity: 0.6; }
-    100% { top: 110%; opacity: 0;   }
+    0%   { top: -2px; opacity: 0.9; }
+    100% { top: 110%; opacity: 0; }
 }
+
 .main .block-container::after {
     content: '' !important;
     position: absolute !important;
-    top: 0 !important; left: 0 !important; right: 0 !important;
+    top: -2px !important; left: 2px !important; right: 2px !important;
     height: 2px !important;
-    background: linear-gradient(90deg, transparent 0%, #00f5ff 30%, #a855f7 55%, #ff2d78 80%, transparent 100%) !important;
-    animation: lgAuthScan 3.5s ease-in-out infinite !important;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        #00f5ff 25%,
+        #a855f7 50%,
+        #ff2d78 75%,
+        transparent 100%
+    ) !important;
+    animation: lgAuthScan 3s ease-in-out infinite !important;
     pointer-events: none !important;
-    border-radius: 18px 18px 0 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+    z-index: 1 !important;
 }
 
 .lg-auth-title {
@@ -792,11 +812,17 @@ def _login_page():
                     elif db.query(Usuario).filter(Usuario.email == email_input.strip()).first():
                         erro = "Este e-mail já está cadastrado."
                     else:
+                        import datetime as _datetime_mod
+                        _agora = _datetime_mod.datetime.utcnow()
                         novo = Usuario(
-                            nome       = nome_input.strip(),
-                            email      = email_input.strip(),
-                            usuario    = usuario_new.strip(),
-                            senha_hash = _hl.sha256(senha_new.encode("utf-8")).hexdigest(),
+                            nome            = nome_input.strip(),
+                            email           = email_input.strip(),
+                            usuario         = usuario_new.strip(),
+                            senha_hash      = _hl.sha256(senha_new.encode("utf-8")).hexdigest(),
+                            plano_status    = "trial",
+                            trial_inicio    = _agora,
+                            trial_expira    = _agora + _datetime_mod.timedelta(days=30),
+                            vibel_consultas = 0,
                         )
                         db.add(novo)
                         db.commit()
@@ -852,6 +878,97 @@ if not st.session_state.get("logged_in"):
 def _uid() -> int:
     """Retorna o ID do usuário autenticado na sessão atual."""
     return int(st.session_state.get("usuario_id", 0))
+
+
+def _plano() -> dict:
+    """Retorna o status do plano cacheado na sessão (1 query por sessão)."""
+    if "plano_cache" not in st.session_state:
+        st.session_state["plano_cache"] = verificar_plano(_uid())
+    return st.session_state["plano_cache"]
+
+
+def _plano_refresh() -> None:
+    """Invalida o cache para forçar releitura na próxima chamada de _plano()."""
+    st.session_state.pop("plano_cache", None)
+
+
+def _upgrade_wall(motivo: str = "") -> None:
+    """Renderiza o bloco de upgrade e para a execução da seção atual."""
+    msg_extra = f'<p style="color:#4a5a80;font-size:0.82rem;margin:0.3rem 0 0;">{motivo}</p>' if motivo else ""
+    st.markdown(f"""
+    <div style="background:linear-gradient(135deg,#0d1220,#1a0a2e);
+                border:1px solid rgba(168,85,247,0.5);border-radius:14px;
+                padding:2rem 1.8rem;text-align:center;margin:1rem 0;
+                box-shadow:0 0 30px rgba(168,85,247,0.2);">
+        <div style="font-size:2.5rem;margin-bottom:0.6rem;">🔒</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:1rem;
+                    color:#a855f7;letter-spacing:2px;margin-bottom:0.5rem;">
+            LIMITE DO PLANO GRÁTIS
+        </div>
+        <p style="color:#8a9abf;font-size:0.88rem;max-width:420px;margin:0 auto 1rem;">
+            Você atingiu o limite do plano grátis.<br>
+            Faça upgrade para o <strong style="color:#00f5ff;">Lyngo Elite</strong> e tenha
+            produtos, links e VIBEL AI <strong style="color:#a855f7;">ilimitados</strong>.
+        </p>
+        {msg_extra}
+        <a href="https://lyngo.com.br" target="_blank"
+           style="display:inline-block;margin-top:0.8rem;padding:0.65rem 2rem;
+                  background:linear-gradient(90deg,#a855f7,#00f5ff);
+                  border-radius:8px;color:#080b14;font-family:'Orbitron',sans-serif;
+                  font-weight:700;font-size:0.82rem;letter-spacing:1.5px;
+                  text-decoration:none;box-shadow:0 0 20px rgba(168,85,247,0.5);">
+            ⚡ FAZER UPGRADE
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def _trial_expirado_wall() -> None:
+    """Tela de bloqueio total quando o trial de 30 dias expira."""
+    st.markdown("""
+    <div style="background:linear-gradient(135deg,#0d1220,#200a0a);
+                border:1px solid rgba(255,45,120,0.5);border-radius:14px;
+                padding:2.5rem 2rem;text-align:center;margin:2rem auto;
+                max-width:500px;box-shadow:0 0 40px rgba(255,45,120,0.2);">
+        <div style="font-size:2.8rem;margin-bottom:0.7rem;">⏰</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:1rem;
+                    color:#ff2d78;letter-spacing:2px;margin-bottom:0.6rem;">
+            PERÍODO GRÁTIS ENCERRADO
+        </div>
+        <p style="color:#8a9abf;font-size:0.88rem;max-width:380px;margin:0 auto 1.2rem;line-height:1.6;">
+            Seus 30 dias de acesso gratuito ao Lyngo Elite expiraram.<br>
+            Assine agora para continuar usando todos os recursos.
+        </p>
+        <a href="https://lyngo.com.br" target="_blank"
+           style="display:inline-block;padding:0.7rem 2.2rem;
+                  background:linear-gradient(90deg,#ff2d78,#a855f7);
+                  border-radius:8px;color:#fff;font-family:'Orbitron',sans-serif;
+                  font-weight:700;font-size:0.82rem;letter-spacing:1.5px;
+                  text-decoration:none;box-shadow:0 0 24px rgba(255,45,120,0.5);">
+            🚀 ASSINAR LYNGO ELITE — R$47/mês
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def _banner_expiracao(dias: int) -> None:
+    """Banner de aviso nos últimos 7 dias do trial."""
+    cor = "#ff2d78" if dias <= 3 else "#f59e0b"
+    st.markdown(f"""
+    <div style="background:rgba(255,45,120,0.07);border:1px solid {cor};
+                border-radius:8px;padding:0.6rem 1rem;margin-bottom:1rem;
+                display:flex;align-items:center;gap:0.7rem;">
+        <span style="font-size:1.1rem;">⚠️</span>
+        <span style="color:{cor};font-size:0.82rem;font-weight:600;">
+            Seu plano grátis expira em <strong>{dias} dia{'s' if dias != 1 else ''}</strong>.
+            <a href="https://lyngo.com.br" target="_blank"
+               style="color:#a855f7;text-decoration:underline;margin-left:0.4rem;">
+               Fazer upgrade agora →
+            </a>
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
+
 
 # ── CSS Cyberpunk ─────────────────────────────────────────────────────────────
 CYBER_CSS = """
@@ -2909,6 +3026,14 @@ page = st.session_state.page
 # ─────────────────────────────────────────────────────────────────────────────
 _main_layout = st.container(key="main_layout")
 
+# ── Verificação global de plano (executa 1x por rerun, usa cache) ─────────────
+_plano_info = _plano()
+if _plano_info["plano"] == "expirado":
+    _trial_expirado_wall()
+    st.stop()
+if _plano_info.get("alerta_expiracao"):
+    _banner_expiracao(_plano_info["dias_restantes"])
+
 if page == "Dashboard":
     st.markdown('<div class="page-title">Dashboard</div>', unsafe_allow_html=True)
     st.markdown('<div class="page-subtitle">Visão geral da sua operação</div>', unsafe_allow_html=True)
@@ -3276,16 +3401,21 @@ elif page == "Gestão de Produtos":
                         _ss.editing_produto_id = None
                         st.markdown(f'<div class="alert-success"><i class="fa-solid fa-check"></i> Produto <strong>{nome}</strong> atualizado!</div>', unsafe_allow_html=True)
                     else:
-                        p = Produto(
-                            nome=nome.strip(),
-                            descricao=descricao.strip() or None,
-                            preco=preco,
-                            link_afiliado=link_afiliado.strip() or None,
-                            user_id=_uid(),
-                        )
-                        db.add(p)
-                        db.commit()
-                        st.markdown(f'<div class="alert-success"><i class="fa-solid fa-check"></i> Produto <strong>{nome}</strong> cadastrado!</div>', unsafe_allow_html=True)
+                        _pi = _plano()
+                        if not _pi["pode_produto"]:
+                            _upgrade_wall(f"Limite de {LIMITE_TRIAL['produtos']} produtos atingido no plano grátis.")
+                        else:
+                            p = Produto(
+                                nome=nome.strip(),
+                                descricao=descricao.strip() or None,
+                                preco=preco,
+                                link_afiliado=link_afiliado.strip() or None,
+                                user_id=_uid(),
+                            )
+                            db.add(p)
+                            db.commit()
+                            _plano_refresh()
+                            st.markdown(f'<div class="alert-success"><i class="fa-solid fa-check"></i> Produto <strong>{nome}</strong> cadastrado!</div>', unsafe_allow_html=True)
                 except Exception as e:
                     db.rollback()
                     st.markdown(f'<div class="alert-error"><i class="fa-solid fa-triangle-exclamation"></i> Erro: {e}</div>', unsafe_allow_html=True)
@@ -3615,25 +3745,30 @@ elif page == "Gestão de Produtos":
 
                         if add_submitted:
                             if url_input.strip():
-                                import hashlib as _hl, time as _tm
-                                _hx: str = _hl.md5(f"{url_input}{_tm.time()}".encode()).hexdigest()
-                                auto_slug = "".join(c for i, c in enumerate(_hx) if i < 8)
-                                db = get_db()
-                                try:
-                                    novo_lk = Link(
-                                        produto_id=p.id,
-                                        url_original=url_input.strip(),
-                                        url_encurtada=auto_slug,
-                                        rotulo=rotulo_input.strip() or None,
-                                    )
-                                    db.add(novo_lk)
-                                    db.commit()
-                                    _ss.adding_link_produto_id = None
-                                except Exception as e:
-                                    db.rollback()
-                                    st.error(str(e))
-                                finally:
-                                    db.close()
+                                _pi = _plano()
+                                if not _pi["pode_link"]:
+                                    _upgrade_wall(f"Limite de {LIMITE_TRIAL['links']} links atingido no plano grátis.")
+                                else:
+                                    import hashlib as _hl, time as _tm
+                                    _hx: str = _hl.md5(f"{url_input}{_tm.time()}".encode()).hexdigest()
+                                    auto_slug = "".join(c for i, c in enumerate(_hx) if i < 8)
+                                    db = get_db()
+                                    try:
+                                        novo_lk = Link(
+                                            produto_id=p.id,
+                                            url_original=url_input.strip(),
+                                            url_encurtada=auto_slug,
+                                            rotulo=rotulo_input.strip() or None,
+                                        )
+                                        db.add(novo_lk)
+                                        db.commit()
+                                        _ss.adding_link_produto_id = None
+                                        _plano_refresh()
+                                    except Exception as e:
+                                        db.rollback()
+                                        st.error(str(e))
+                                    finally:
+                                        db.close()
                             st.rerun()
 
                         if add_cancelled:
@@ -3676,20 +3811,25 @@ elif page == "Gerador de Links":
                 if not url_original.strip():
                     st.markdown('<div class="alert-error">Informe a URL original.</div>', unsafe_allow_html=True)
                 else:
-                    import hashlib, time
-                    _hx: str = hashlib.md5(f"{url_original}{time.time()}".encode()).hexdigest()
-                    slug: str = url_custom.strip() if url_custom.strip() else "".join(c for i, c in enumerate(_hx) if i < 8)
-                    db = get_db()
-                    try:
-                        link = Link(produto_id=p_sel.id, url_original=url_original.strip(), url_encurtada=slug)
-                        db.add(link)
-                        db.commit()
-                        st.markdown(f'<div class="alert-success"><i class="fa-solid fa-check"></i> Link criado: <strong>lyngo.com.br/{slug}</strong></div>', unsafe_allow_html=True)
-                    except Exception as e:
-                        db.rollback()
-                        st.markdown(f'<div class="alert-error">Erro: {e}</div>', unsafe_allow_html=True)
-                    finally:
-                        db.close()
+                    _pi = _plano()
+                    if not _pi["pode_link"]:
+                        _upgrade_wall(f"Limite de {LIMITE_TRIAL['links']} links atingido no plano grátis.")
+                    else:
+                        import hashlib, time
+                        _hx: str = hashlib.md5(f"{url_original}{time.time()}".encode()).hexdigest()
+                        slug: str = url_custom.strip() if url_custom.strip() else "".join(c for i, c in enumerate(_hx) if i < 8)
+                        db = get_db()
+                        try:
+                            link = Link(produto_id=p_sel.id, url_original=url_original.strip(), url_encurtada=slug)
+                            db.add(link)
+                            db.commit()
+                            _plano_refresh()
+                            st.markdown(f'<div class="alert-success"><i class="fa-solid fa-check"></i> Link criado: <strong>lyngo.com.br/{slug}</strong></div>', unsafe_allow_html=True)
+                        except Exception as e:
+                            db.rollback()
+                            st.markdown(f'<div class="alert-error">Erro: {e}</div>', unsafe_allow_html=True)
+                        finally:
+                            db.close()
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_list:
@@ -3871,14 +4011,28 @@ elif page == "VIBEL AI":
         """, unsafe_allow_html=True)
     else:
         # ── Header da VIBEL ───────────────────────────────────────────────────
-        st.markdown("""
+        _pi_hdr = _plano()
+        _vibel_badge = ""
+        if _pi_hdr["plano"] == "trial":
+            _usadas = _pi_hdr["vibel_consultas"]
+            _restam = max(0, LIMITE_TRIAL["vibel"] - _usadas)
+            _badge_cor = "#ff2d78" if _restam <= 1 else "#f59e0b" if _restam <= 2 else "#4a5a80"
+            _vibel_badge = (
+                f'<span style="font-size:0.68rem;color:{_badge_cor};'
+                f'border:1px solid {_badge_cor};border-radius:4px;'
+                f'padding:0.1rem 0.4rem;letter-spacing:0.5px;">'
+                f'{_restam} consulta{"s" if _restam != 1 else ""} restante{"s" if _restam != 1 else ""}'
+                f'</span>'
+            )
+        st.markdown(f"""
         <div class="vivi-header">
             <div style="font-size:2rem;">⚡</div>
             <div>
                 <div class="vivi-header-name">VIBEL AI</div>
                 <div class="vivi-header-sub">LYNGO ELITE</div>
             </div>
-            <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
+            <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:flex-end;">
+                {_vibel_badge}
                 <div class="vivi-status-dot"></div>
                 <span style="font-size:0.72rem;color:#39ff14;letter-spacing:1px;">ONLINE</span>
             </div>
@@ -3931,22 +4085,30 @@ elif page == "VIBEL AI":
             and not st.session_state.get("vivi_generating", False)
         )
         if _needs_reply:
-            st.session_state.vivi_generating = True
-            with st.chat_message("assistant", avatar="⚡"):
-                with st.spinner("VIBEL analisando..."):
-                    try:
-                        _reply = _vivi_generate(_msgs, VIVI_SYSTEM_PROMPT)
-                        st.session_state.vivi_messages.append(
-                            {"role": "assistant", "content": _reply}
-                        )
-                    except Exception as _ve:
-                        _err_txt = str(_ve)
-                        st.session_state.vivi_messages.append(
-                            {"role": "assistant", "content": f"⚠️ {_err_txt}"}
-                        )
-                    finally:
-                        st.session_state.vivi_generating = False
-            st.rerun()
+            _pi_vibel = _plano()
+            if not _pi_vibel["pode_vibel"]:
+                _upgrade_wall(
+                    f"Limite de {LIMITE_TRIAL['vibel']} consultas VIBEL atingido no plano grátis."
+                )
+            else:
+                st.session_state.vivi_generating = True
+                with st.chat_message("assistant", avatar="⚡"):
+                    with st.spinner("VIBEL analisando..."):
+                        try:
+                            _reply = _vivi_generate(_msgs, VIVI_SYSTEM_PROMPT)
+                            st.session_state.vivi_messages.append(
+                                {"role": "assistant", "content": _reply}
+                            )
+                            incrementar_vibel(_uid())
+                            _plano_refresh()
+                        except Exception as _ve:
+                            _err_txt = str(_ve)
+                            st.session_state.vivi_messages.append(
+                                {"role": "assistant", "content": f"⚠️ {_err_txt}"}
+                            )
+                        finally:
+                            st.session_state.vivi_generating = False
+                st.rerun()
 
         # ── Input do chat ─────────────────────────────────────────────────────
         _user_input = st.chat_input(

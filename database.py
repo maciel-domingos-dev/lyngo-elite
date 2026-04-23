@@ -25,6 +25,11 @@ class Usuario(Base):
     # ── Campos de autenticação local ──────────────────────────────────────────
     usuario    = Column(String(100), unique=True, nullable=True, index=True)
     senha_hash = Column(String(255), nullable=True)
+    # ── Plano / Trial ─────────────────────────────────────────────────────────
+    trial_inicio    = Column(DateTime, nullable=True)
+    trial_expira    = Column(DateTime, nullable=True)
+    plano_status    = Column(String(20), nullable=False, default="trial")
+    vibel_consultas = Column(Integer, nullable=False, default=0)
 
     produtos = relationship("Produto", back_populates="usuario", cascade="all, delete-orphan")
 
@@ -154,37 +159,60 @@ def revogar_token(token: str) -> None:
 
 
 def _migrate_usuarios() -> bool:
-    """Verifica se o schema está completo.
-    Se faltar usuario/senha_hash, faz DROP CASCADE de todas as tabelas e retorna True
-    (sinaliza que init_db deve rodar create_all novamente)."""
+    """Verifica se o schema base está completo (usuario + senha_hash).
+    Se faltar, faz DROP CASCADE e retorna True para recriar tudo."""
     with engine.connect() as conn:
-        # Verifica se a tabela existe
         tbl = conn.execute(text(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='usuarios'"
         )).fetchone()
 
         if not tbl:
-            return False  # Será criada pelo create_all
+            return False
 
         cols = {row[1] for row in conn.execute(text("PRAGMA table_info(usuarios)"))}
 
         if "usuario" in cols and "senha_hash" in cols:
-            return False  # Schema OK
+            return False
 
-        # Schema incompleto — reset total (DROP CASCADE manual no SQLite)
         conn.execute(text("PRAGMA foreign_keys = OFF"))
         for tbl_name in ["click_events", "sessao_tokens", "vendas", "links", "produtos", "usuarios"]:
             conn.execute(text(f"DROP TABLE IF EXISTS {tbl_name}"))
         conn.execute(text("PRAGMA foreign_keys = ON"))
         conn.commit()
-        return True  # Sinaliza que precisa recriar
+        return True
+
+
+def _migrate_plano() -> None:
+    """Adiciona colunas de plano na tabela usuarios sem perder dados existentes."""
+    with engine.connect() as conn:
+        tbl = conn.execute(text(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='usuarios'"
+        )).fetchone()
+        if not tbl:
+            return
+
+        cols = {row[1] for row in conn.execute(text("PRAGMA table_info(usuarios)"))}
+
+        _now = datetime.utcnow().isoformat()
+        _exp = (datetime.utcnow() + timedelta(days=30)).isoformat()
+
+        if "trial_inicio" not in cols:
+            conn.execute(text(f"ALTER TABLE usuarios ADD COLUMN trial_inicio DATETIME DEFAULT '{_now}'"))
+        if "trial_expira" not in cols:
+            conn.execute(text(f"ALTER TABLE usuarios ADD COLUMN trial_expira DATETIME DEFAULT '{_exp}'"))
+        if "plano_status" not in cols:
+            conn.execute(text("ALTER TABLE usuarios ADD COLUMN plano_status VARCHAR(20) DEFAULT 'trial'"))
+        if "vibel_consultas" not in cols:
+            conn.execute(text("ALTER TABLE usuarios ADD COLUMN vibel_consultas INTEGER DEFAULT 0"))
+
+        conn.commit()
 
 
 def init_db():
     Base.metadata.create_all(bind=engine)
     if _migrate_usuarios():
-        # Schema estava incompleto — recria todas as tabelas após o reset
         Base.metadata.create_all(bind=engine)
+    _migrate_plano()
     _seed_admin()
 
 
@@ -194,13 +222,124 @@ def _seed_admin():
     try:
         existe = db.query(Usuario).filter(Usuario.usuario == "admin").first()
         if not existe:
+            _now = datetime.utcnow()
             admin = Usuario(
                 nome="Administrador",
                 email="admin@linkguard.local",
                 usuario="admin",
                 senha_hash=_hash("linkguard2025"),
+                plano_status="elite",
+                trial_inicio=_now,
+                trial_expira=_now + timedelta(days=36500),
+                vibel_consultas=0,
             )
             db.add(admin)
+            db.commit()
+        else:
+            # Garante que admin existente tenha plano elite
+            if not existe.plano_status or existe.plano_status == "trial":
+                existe.plano_status = "elite"
+                if not existe.trial_inicio:
+                    existe.trial_inicio = datetime.utcnow()
+                if not existe.trial_expira:
+                    existe.trial_expira = datetime.utcnow() + timedelta(days=36500)
+                db.commit()
+    finally:
+        db.close()
+
+
+# ── Helpers de plano ──────────────────────────────────────────────────────────
+
+LIMITE_TRIAL = {"produtos": 3, "links": 15, "vibel": 5}
+
+
+def verificar_plano(usuario_id: int) -> dict:
+    """Retorna o status do plano e contadores do usuário.
+
+    Retorna dict com:
+        plano: 'trial' | 'elite' | 'expirado'
+        dias_restantes: int (só para trial)
+        pode_produto: bool
+        pode_link: bool
+        pode_vibel: bool
+        total_produtos: int
+        total_links: int
+        vibel_consultas: int
+        alerta_expiracao: bool  (True nos últimos 7 dias do trial)
+    """
+    db = SessionLocal()
+    try:
+        u = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+        if not u:
+            return {"plano": "expirado"}
+
+        # Plano elite — sem restrições
+        if u.plano_status == "elite":
+            return {
+                "plano": "elite",
+                "dias_restantes": None,
+                "pode_produto": True,
+                "pode_link": True,
+                "pode_vibel": True,
+                "total_produtos": 0,
+                "total_links": 0,
+                "vibel_consultas": u.vibel_consultas or 0,
+                "alerta_expiracao": False,
+            }
+
+        # Calcula dias restantes do trial
+        agora = datetime.utcnow()
+        expira = u.trial_expira or (agora - timedelta(days=1))
+        dias_restantes = max(0, (expira - agora).days)
+        expirado = agora > expira
+
+        if expirado:
+            return {
+                "plano": "expirado",
+                "dias_restantes": 0,
+                "pode_produto": False,
+                "pode_link": False,
+                "pode_vibel": False,
+                "total_produtos": 0,
+                "total_links": 0,
+                "vibel_consultas": u.vibel_consultas or 0,
+                "alerta_expiracao": False,
+            }
+
+        # Conta recursos usados
+        total_produtos = (
+            db.query(Produto).filter(Produto.user_id == usuario_id).count()
+        )
+        total_links = (
+            db.query(Link)
+            .join(Produto, Link.produto_id == Produto.id)
+            .filter(Produto.user_id == usuario_id)
+            .count()
+        )
+        vibel = u.vibel_consultas or 0
+
+        return {
+            "plano": "trial",
+            "dias_restantes": dias_restantes,
+            "pode_produto": total_produtos < LIMITE_TRIAL["produtos"],
+            "pode_link": total_links < LIMITE_TRIAL["links"],
+            "pode_vibel": vibel < LIMITE_TRIAL["vibel"],
+            "total_produtos": total_produtos,
+            "total_links": total_links,
+            "vibel_consultas": vibel,
+            "alerta_expiracao": dias_restantes <= 7,
+        }
+    finally:
+        db.close()
+
+
+def incrementar_vibel(usuario_id: int) -> None:
+    """Incrementa o contador de consultas VIBEL do usuário."""
+    db = SessionLocal()
+    try:
+        u = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+        if u:
+            u.vibel_consultas = (u.vibel_consultas or 0) + 1
             db.commit()
     finally:
         db.close()
